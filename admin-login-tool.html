@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Trợ — Admin Login Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0A0E1A;
+      --surface:   #1C2340;
+      --border:    #2A3356;
+      --accent:    #00E5A0;
+      --accent-dim:#00E5A015;
+      --amber:     #F59E0B;
+      --red:       #EF4444;
+      --text:      #FFFFFF;
+      --muted:     #8892B0;
+      --r-card:    20px;
+      --r-btn:     14px;
+      --r-chip:    12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 18px; color: var(--bg);
+    }
+    .header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px; font-weight: 700; color: var(--text);
+    }
+    .header p { font-size: 13px; color: var(--muted); }
+    .badge {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: var(--r-chip);
+      padding: 4px 12px;
+      font-size: 12px; font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Config bar ── */
+    .config-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .config-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+    .config-input {
+      flex: 1; min-width: 320px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-chip);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 8px 14px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+    .config-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,229,160,0.12);
+    }
+    .config-input::placeholder { color: var(--muted); }
+
+    .app-url-input {
+      flex: 1; min-width: 260px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-chip);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 8px 14px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+    .app-url-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,229,160,0.12);
+    }
+    .app-url-input::placeholder { color: var(--muted); }
+
+    .btn-save {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: var(--r-btn);
+      padding: 9px 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+      white-space: nowrap;
+    }
+    .btn-save:hover { opacity: 0.9; }
+    .btn-save:active { transform: scale(0.96); }
+
+    /* ── Main content ── */
+    .main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .search-wrap {
+      position: relative; flex: 1; min-width: 240px;
+    }
+    .search-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: 16px; pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-chip);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 10px 14px 10px 40px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,229,160,0.12);
+    }
+    .search-input::placeholder { color: var(--muted); }
+
+    .count-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-chip);
+      padding: 8px 16px;
+      font-size: 13px; color: var(--muted);
+      white-space: nowrap;
+    }
+    .count-chip span { color: var(--accent); font-weight: 600; }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+    }
+
+    /* ── User Card ── */
+    .user-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-card);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .user-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--border);
+      transition: background 0.2s;
+    }
+    .user-card:hover { border-color: #3A4466; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+    .user-card.logged-in::before { background: var(--accent); }
+    .user-card.logged-in { border-color: rgba(0,229,160,0.3); }
+
+    .card-top { display: flex; align-items: flex-start; gap: 12px; }
+    .avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 17px; font-weight: 700; color: var(--accent);
+      flex-shrink: 0;
+    }
+    .card-info { flex: 1; min-width: 0; }
+    .card-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px; font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-phone {
+      font-size: 13px; color: var(--accent);
+      margin-top: 2px; font-weight: 500;
+    }
+
+    .card-meta { display: flex; flex-direction: column; gap: 5px; }
+    .meta-row { display: flex; align-items: center; gap: 8px; }
+    .meta-icon { color: var(--muted); font-size: 13px; flex-shrink: 0; }
+    .meta-text { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── Creds row ── */
+    .creds-row {
+      display: flex; gap: 8px;
+    }
+    .cred-chip {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 10px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 6px; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .cred-chip:hover { border-color: var(--accent); }
+    .cred-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .cred-value { font-size: 12px; color: var(--text); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .copy-icon { color: var(--muted); font-size: 11px; flex-shrink: 0; }
+    .cred-chip:hover .copy-icon { color: var(--accent); }
+
+    /* ── Action buttons ── */
+    .card-actions { display: flex; gap: 8px; }
+    .btn-login {
+      flex: 1;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: var(--r-btn);
+      height: 42px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .btn-login:hover { opacity: 0.92; }
+    .btn-login:active { transform: scale(0.96); }
+    .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-login.loading { opacity: 0.7; }
+
+    .btn-open {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--r-btn);
+      height: 42px; width: 42px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      font-size: 16px;
+    }
+    .btn-open:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Status badge on card ── */
+    .status-ok {
+      position: absolute; top: 14px; right: 14px;
+      background: rgba(0,229,160,0.15);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 11px; font-weight: 500;
+    }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 10px;
+      z-index: 9999;
+    }
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: flex; align-items: center; gap: 12px;
+      min-width: 260px; max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    .toast.success { border-left: 3px solid var(--accent); }
+    .toast.error   { border-left: 3px solid var(--red); }
+    .toast.info    { border-left: 3px solid var(--amber); }
+    .toast-icon { font-size: 18px; flex-shrink: 0; }
+    .toast-msg { font-size: 13px; color: var(--text); line-height: 1.4; }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    @keyframes fadeOut {
+      to { opacity: 0; transform: translateY(10px); }
+    }
+
+    /* ── Modal token ── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      max-width: 500px; width: 100%;
+      animation: modalIn 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    @keyframes modalIn {
+      from { transform: scale(0.95) translateY(10px); opacity: 0; }
+      to   { transform: scale(1)    translateY(0);    opacity: 1; }
+    }
+    .modal-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px; font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .token-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--accent);
+      word-break: break-all;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-modal-primary {
+      flex: 1;
+      background: var(--accent); color: var(--bg);
+      border: none; border-radius: var(--r-btn);
+      height: 44px; font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-modal-primary:hover { opacity: 0.9; }
+    .btn-modal-primary:active { transform: scale(0.97); }
+    .btn-modal-ghost {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--border); color: var(--text);
+      border-radius: var(--r-btn);
+      height: 44px; font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer; transition: border-color 0.15s;
+    }
+    .btn-modal-ghost:hover { border-color: var(--accent); }
+
+    /* ── Skeleton ── */
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+    }
+
+    /* ── Empty state ── */
+    .empty {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .empty-icon { font-size: 48px; color: var(--accent); margin-bottom: 16px; }
+    .empty-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .empty-sub { font-size: 14px; color: var(--muted); }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .header { padding: 14px 16px; }
+      .config-bar { padding: 12px 16px; }
+      .main { padding: 16px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Login All button ── */
+    .btn-login-all {
+      background: linear-gradient(135deg, #00E5A0, #00C4FF);
+      color: var(--bg);
+      border: none;
+      border-radius: var(--r-btn);
+      padding: 0 22px;
+      height: 44px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 20px rgba(0,229,160,0.25);
+    }
+    .btn-login-all:hover { opacity: 0.92; box-shadow: 0 6px 24px rgba(0,229,160,0.4); }
+    .btn-login-all:active { transform: scale(0.96); }
+    .btn-login-all:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-card);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .progress-label { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); }
+    .progress-stat  { font-size: 13px; color: var(--accent); font-weight: 600; }
+    .progress-track {
+      height: 8px;
+      background: var(--bg);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #00E5A0, #00C4FF);
+      border-radius: 99px;
+      transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+    .progress-detail { margin-top: 10px; font-size: 12px; color: var(--muted); min-height: 18px; }
+
+    /* ── Bulk result ── */
+    .bulk-result-grid {
+      display: flex; flex-direction: column; gap: 6px;
+      max-height: 320px; overflow-y: auto;
+      margin-top: 4px;
+      padding-right: 4px;
+    }
+    .bulk-result-grid::-webkit-scrollbar { width: 4px; }
+    .bulk-result-grid::-webkit-scrollbar-track { background: var(--bg); border-radius: 4px; }
+    .bulk-result-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .bulk-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .bulk-row.ok  { border-left: 3px solid var(--accent); }
+    .bulk-row.err { border-left: 3px solid var(--red); }
+    .bulk-icon { font-size: 14px; flex-shrink: 0; }
+    .bulk-name { flex: 1; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bulk-phone { color: var(--muted); font-size: 12px; flex-shrink: 0; }
+    .bulk-err-msg { color: var(--red); font-size: 11px; flex-shrink: 0; }
+
+    /* ── Add User button ── */
+    .btn-add-user {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: var(--r-btn);
+      padding: 0 20px;
+      height: 44px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-add-user:hover { background: rgba(0,229,160,0.1); }
+    .btn-add-user:active { transform: scale(0.96); }
+
+    /* ── Clear sessions button ── */
+    .btn-clear {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: var(--r-btn);
+      padding: 0 16px;
+      height: 44px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-clear:hover { border-color: var(--red); color: var(--red); }
+    .btn-clear:active { transform: scale(0.96); }
+
+    /* ── Token expiry chip ── */
+    .token-expiry {
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(0,229,160,0.08);
+      border-radius: 6px;
+      padding: 2px 7px;
+      display: inline-block;
+      margin-top: 4px;
+    }
+    .token-expiry.warn { color: var(--amber); background: rgba(245,158,11,0.1); }
+
+    /* ── Auto Scheduler Panel ── */
+    .scheduler-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-card);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      border-top: 2px solid #A78BFA;
+      animation: slideDown 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+    .scheduler-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .scheduler-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px; font-weight: 700;
+      color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .scheduler-controls {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .sched-stat-row {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .sched-stat {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 16px;
+      display: flex; flex-direction: column; gap: 2px;
+      min-width: 130px;
+    }
+    .sched-stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .sched-stat-value { font-size: 20px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; color: var(--text); }
+    .sched-stat-value.green { color: #00E5A0; }
+    .sched-stat-value.purple { color: #A78BFA; }
+    .sched-stat-value.amber { color: #F59E0B; }
+    .sched-next {
+      font-size: 13px; color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .sched-next strong { color: var(--text); }
+    .btn-sched {
+      background: linear-gradient(135deg, #A78BFA, #7C3AED);
+      color: #fff;
+      border: none;
+      border-radius: var(--r-btn);
+      padding: 0 20px;
+      height: 40px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 14px rgba(167,139,250,0.3);
+    }
+    .btn-sched:hover { opacity: 0.9; }
+    .btn-sched:active { transform: scale(0.96); }
+    .btn-sched:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+    .btn-sched-danger {
+      background: transparent;
+      border: 1px solid var(--red);
+      color: var(--red);
+      border-radius: var(--r-btn);
+      padding: 0 16px;
+      height: 40px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-sched-danger:hover { background: rgba(239,68,68,0.1); }
+    /* Online time per-user mini bars */
+    .user-online-bar {
+      margin-top: 6px;
+    }
+    .user-online-track {
+      height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 3px;
+    }
+    .user-online-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #A78BFA, #00E5A0);
+      transition: width 0.5s;
+    }
+    .user-online-label {
+      font-size: 10px; color: var(--muted);
+      display: flex; justify-content: space-between;
+    }
+    .user-online-label.done { color: var(--accent); }
+    /* Scheduler config row */
+    .sched-config-row {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
+    .sched-config-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .sched-time-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 6px 12px;
+      outline: none;
+      width: 80px;
+      transition: border-color 0.15s;
+    }
+    .sched-time-input:focus { border-color: #A78BFA; }
+    .sched-sep { color: var(--muted); font-size: 13px; }
+
+    /* ── Keepalive Banner ── */
+    .keepalive-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-card);
+      padding: 12px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      border-top: 2px solid var(--accent);
+      animation: slideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .keepalive-status {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .keepalive-status strong {
+      color: var(--text);
+    }
+    .keepalive-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-ping-now {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 0 16px;
+      height: 44px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+    }
+    .btn-ping-now:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-ping-now:active {
+      transform: scale(0.96);
+    }
+
+    /* Modern Switch UI */
+    .switch-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      min-height: 44px;
+      padding: 0 4px;
+    }
+    .switch-input {
+      display: none;
+    }
+    .switch-slider {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      background-color: var(--border);
+      border-radius: 20px;
+      transition: background-color 0.25s;
+    }
+    .switch-slider::before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--text);
+      border-radius: 50%;
+      transition: transform 0.25s;
+    }
+    .switch-input:checked + .switch-slider {
+      background-color: var(--accent);
+    }
+    .switch-input:checked + .switch-slider::before {
+      transform: translateX(20px);
+      background-color: var(--bg);
+    }
+    .switch-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .user-card.ping-success {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(0, 229, 160, 0.15);
+      transition: all 0.3s;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-15px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ── Form inside modal ── */
+    .form-grid { display: flex; flex-direction: column; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label {
+      font-size: 12px; font-weight: 500; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .required { color: var(--red); }
+    .form-hint { text-transform: none; letter-spacing: 0; font-weight: 400; color: #4A5580; }
+    .form-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-chip);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,229,160,0.12);
+    }
+    .form-input::placeholder { color: #4A5580; }
+    .form-error {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid var(--red);
+      border-radius: 10px;
+      color: var(--red);
+      font-size: 13px;
+      padding: 10px 14px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo">A</div>
+    <div>
+      <h1>Admin Login Tool</h1>
+      <p>Đăng nhập nhanh vào tài khoản user — Độc lập với A Trợ</p>
+    </div>
+  </div>
+  <div class="badge" id="statusBadge">⚪ Chưa kết nối</div>
+</header>
+
+<!-- Config bar -->
+<div class="config-bar">
+  <span class="config-label">API</span>
+  <input class="config-input" id="apiUrl" type="text"
+    placeholder="https://your-backend.railway.app/api/v1"
+    value="" />
+  <span class="config-label" style="margin-left:8px">App URL</span>
+  <input class="app-url-input" id="appUrl" type="text"
+    placeholder="https://your-frontend.vercel.app"
+    value="" />
+  <button class="btn-save" onclick="saveConfig()">💾 Lưu &amp; Kết nối</button>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" type="text"
+        placeholder="Tìm tên quán, số điện thoại, địa chỉ..."
+        oninput="renderGrid()" />
+    </div>
+    <div class="count-chip">
+      Hiển thị <span id="countVisible">0</span> / <span id="countTotal">0</span> user
+    </div>
+    <button class="btn-add-user" onclick="openAddUserModal()">
+      + Thêm user
+    </button>
+    <button class="btn-clear" onclick="clearSessions()" title="Xóa tất cả phiên lưu">
+      🗑️ Xóa phiên
+    </button>
+    <button class="btn-login-all" id="btnLoginAll" onclick="loginAllUsers()">
+      ⚡ Đăng nhập tất cả
+    </button>
+    <button class="btn-add-user" id="btnToggleSched" onclick="toggleSchedulerPanel()" style="border-color:#A78BFA;color:#A78BFA" title="Tự động đăng nhập hàng ngày">
+      🗓️ Auto Schedule
+    </button>
+  </div>
+
+  <!-- Auto Daily Scheduler Panel -->
+  <div class="scheduler-panel" id="schedulerPanel" style="display:none">
+    <div class="scheduler-header">
+      <div class="scheduler-title">
+        🗓️ Auto Daily Scheduler
+        <span id="schedStatusDot" style="font-size:11px;background:rgba(167,139,250,0.15);border:1px solid #A78BFA;color:#A78BFA;border-radius:20px;padding:2px 10px">⏸ Đang chờ</span>
+      </div>
+      <div class="scheduler-controls">
+        <button class="btn-sched" id="btnRunNow" onclick="schedRunNow()">▶ Chạy ngay</button>
+        <button class="btn-sched-danger" id="btnStopSched" onclick="stopScheduler()">■ Dừng</button>
+      </div>
+    </div>
+
+    <div class="sched-stat-row">
+      <div class="sched-stat">
+        <div class="sched-stat-label">Đã đạt 8h hôm nay</div>
+        <div class="sched-stat-value green" id="schedDoneCount">0</div>
+      </div>
+      <div class="sched-stat">
+        <div class="sched-stat-label">Đang online</div>
+        <div class="sched-stat-value purple" id="schedOnlineCount">0</div>
+      </div>
+      <div class="sched-stat">
+        <div class="sched-stat-label">Tổng user</div>
+        <div class="sched-stat-value" id="schedTotalCount">0</div>
+      </div>
+      <div class="sched-stat">
+        <div class="sched-stat-label">Lần đăng nhập tiếp</div>
+        <div class="sched-stat-value amber" id="schedNextLogin" style="font-size:14px">—</div>
+      </div>
+    </div>
+
+    <div class="sched-next" id="schedStatusLine">⏳ Scheduler chưa khởi động.</div>
+
+    <div class="sched-config-row">
+      <span class="sched-config-label">⏰ Giờ đăng nhập mỗi ngày (random từ</span>
+      <input class="sched-time-input" id="schedHourFrom" type="number" min="0" max="23" value="6" title="Giờ bắt đầu" />
+      <span class="sched-sep">đến</span>
+      <input class="sched-time-input" id="schedHourTo" type="number" min="0" max="23" value="9" title="Giờ kết thúc" />
+      <span class="sched-sep">h)</span>
+      <span class="sched-config-label" style="margin-left:12px">🕗 Min online/ngày</span>
+      <input class="sched-time-input" id="schedMinHours" type="number" min="1" max="24" value="8" title="Số giờ tối thiểu" />
+      <span class="sched-sep">giờ</span>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-wrap" id="progressWrap" style="display:none">
+    <div class="progress-header">
+      <span class="progress-label" id="progressLabel">Đang đăng nhập...</span>
+      <span class="progress-stat" id="progressStat">0 / 0</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="progress-detail" id="progressDetail"></div>
+  </div>
+
+  <!-- Keepalive status banner -->
+  <div class="keepalive-banner" id="keepAliveBanner" style="display:none">
+    <div class="keepalive-status" id="keepAliveStatus">
+      🟢 Tự động duy trì đăng nhập đang hoạt động...
+    </div>
+    <div class="keepalive-actions">
+      <label class="switch-wrap" title="Tự động gửi request ping lên server để giữ các user luôn online">
+        <input type="checkbox" class="switch-input" id="keepAliveToggle" checked onchange="toggleKeepAlive(this.checked)" />
+        <span class="switch-slider"></span>
+        <span class="switch-label">Duy trì hoạt động</span>
+      </label>
+      <button class="btn-ping-now" id="btnPingNow" onclick="triggerPingNow()" title="Ping thủ công toàn bộ user lập tức">⚡ Ping ngay</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid">
+    <!-- Cards rendered by JS -->
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Modal add user -->
+<div class="modal-backdrop" id="modalAddUser" style="display:none">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">+ Thêm user mới</div>
+    <div class="modal-sub" style="margin-bottom:20px">Tạo tài khoản mới và thêm vào danh sách</div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Tên cửa hàng / quán <span class="required">*</span></label>
+        <input class="form-input" id="newName" type="text" placeholder="Ví dụ: Quán Phở Nam" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Số điện thoại (dùng làm mã đăng nhập) <span class="required">*</span></label>
+        <input class="form-input" id="newPhone" type="text" placeholder="Ví dụ: 0912345678" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mật khẩu <span class="form-hint">(mặc định = số điện thoại)</span></label>
+        <input class="form-input" id="newPassword" type="text" placeholder="Để trống = dùng SĐT" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Địa chỉ</label>
+        <input class="form-input" id="newAddress" type="text" placeholder="Ví dụ: Thôn 3, Thạch Hòa, Hà Nội" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email <span class="form-hint">(chỉ hiển thị trong tool)</span></label>
+        <input class="form-input" id="newEmail" type="email" placeholder="example@gmail.com" />
+      </div>
+    </div>
+
+    <div id="addUserError" class="form-error" style="display:none"></div>
+
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="btn-modal-primary" id="btnSubmitAddUser" onclick="submitAddUser()">
+        ➕ Tạo tài khoản
+      </button>
+      <button class="btn-modal-ghost" onclick="closeAddUserModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop" id="modal" style="display:none">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Đăng nhập thành công!</div>
+    <div class="modal-sub" id="modalSub">Token JWT đã được tạo. Sao chép hoặc mở App ngay.</div>
+    <div class="token-box" id="tokenBox"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-primary" onclick="copyTokenAndOpen()">📋 Copy &amp; Mở App</button>
+      <button class="btn-modal-ghost" onclick="closeModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal bulk result -->
+<div class="modal-backdrop" id="modalBulk" style="display:none">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title" id="bulkTitle">⚡ Kết quả đăng nhập hàng loạt</div>
+    <div class="modal-sub" id="bulkSub"></div>
+    <div class="bulk-result-grid" id="bulkResultGrid"></div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="btn-modal-primary" onclick="exportTokens()">📥 Xuất tất cả token</button>
+      <button class="btn-modal-ghost" onclick="closeBulkModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────────────────
+const USERS = [
+  { name: 'Quán Nhậu Galaxy',              phone: '862019199',  email: 'quannhaugalaxy@gmail.com',       address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: 'Ghiền BBQ',                      phone: '0372311859', email: 'quachmanhloc1999@gmail.com',     address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: 'MANYO Tteokbokki Hoà Lạc',       phone: '0977567833', email: 'manyohoalac@gmail.com',          address: 'Tân Xã - Hòa Lạc' },
+  { name: 'HaBi Streets Cuisine - Hoà Lạc', phone: '0398900026', email: '',                               address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: '1988 BBQ',                        phone: '0329656565', email: '1988bbq1@gmail.com',             address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: 'Bánh tráng Tana',                phone: '0975533159', email: 'sieuthibanhtrangtana@gmail.com', address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: 'Nhất Nướng Quán',                phone: '0985372989', email: '',                               address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: 'Cơm Gà Ruby',                    phone: '0966378633', email: 'Ngocthuytiin@gmail.com',         address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: 'Sweet Cake Tân Xã',              phone: '0334678158', email: '',                               address: 'Tân Xã - Hòa Lạc' },
+  { name: 'Cơm rang Nguyễn Việt',           phone: '356721667',  email: '',                               address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: 'Young Food&Drink',               phone: '0335990484', email: '',                               address: 'Tân Xã - Hòa Lạc' },
+  { name: 'Lẩu nướng 368',                  phone: '977625684',  email: 'giakhang842009@gmail.com',       address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: 'Nem nướng Hùng Anh',             phone: '342436528',  email: '',                               address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: 'Trung Toàn Bakery',              phone: '0338893388', email: '',                               address: 'Hòa Lạc, Bình Yên, Thạch Thất, Hà Nội' },
+  { name: 'Thành Phát Bakery Hoà Lạc',      phone: '0906066585', email: '',                               address: 'Hòa Lạc, Bình Yên, Thạch Thất, Hà Nội' },
+  { name: 'Taetna Hoà Lạc',                 phone: '968478816',  email: '',                               address: 'Thạch Hòa - Thạch Thất' },
+  { name: 'Hằng Nguyễn bakery',             phone: '962288790',  email: '',                               address: 'Ngã tư lục quân, Hòa lạc' },
+  { name: 'Chè ngon Jolly',                 phone: '0869958939', email: '',                               address: 'Thôn 3 Thạch Hòa' },
+  { name: 'Techno Tea',                     phone: '326392618',  email: '',                               address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: 'Takocha',                        phone: '0343857996', email: '',                               address: 'Thôn 3 - Thạch Hòa - Thạch Thất' },
+  { name: 'Bún Cá Nam Hà',                  phone: '966707009',  email: '',                               address: 'Hòa Lạc, Bình Yên, Thạch Thất, Hà Nội' },
+  { name: 'Barbershop Hoà Lạc',             phone: '389369202',  email: '',                               address: 'Hòa Lạc, Bình Yên, Thạch Thất, Hà Nội' },
+  { name: 'Tiên An Costumes',               phone: '929745666',  email: '',                               address: 'Hòa Lạc, Bình Yên, Thạch Thất, Hà Nội' },
+  { name: 'Phở Nam Nhất',                   phone: '385748668',  email: '',                               address: 'Cầu Hòa Lạc, Bình Yên, Thạch Thất, Hà Nội' },
+  { name: "Loan's Pickleball",             phone: '0989419586', email: '',                               address: 'Ngõ 5 Cụm 4 Thôn 3 Thạch Hòa' },
+  { name: 'Qin Hair Salon',                 phone: '0983071566', email: '',                               address: 'Thôn 3 Hòa Lạc' },
+  { name: 'Liên Facial Spa',                phone: '0395769189', email: '',                               address: 'Thôn 3 Hòa Lạc' },
+  { name: 'Bún Chả Thu Hà',                 phone: '0898243680', email: '',                               address: 'Thôn 3 Hòa Lạc' },
+  { name: 'Bún Bò Huế Đức Duy',             phone: '0973271135', email: '',                               address: 'Thôn 3 Hòa Lạc' },
+  { name: 'Quán Ăn Đêm Tuấn Hằng',          phone: '0964495509', email: '',                               address: 'Thôn 2 Hòa Lạc' },
+  { name: 'Bún Cá Thái Bình',               phone: '0901513669', email: '',                               address: 'Thôn 2 Hòa Lạc' },
+  { name: 'Lẩu Nướng 368',                  phone: '0977625684', email: '',                               address: 'Ngã 3 Hòa lạc' },
+  { name: 'Quán meo meo phở bò cơm rang',   phone: '0981890636', email: '',                               address: 'Thôn 4 Thạch Hòa' },
+  { name: 'Yên Bái Quán',                   phone: '0879952398', email: '',                               address: 'Thôn 3 Thạch Hòa' },
+  { name: 'Cơm sạch 17',                    phone: '0822783123', email: '',                               address: 'Thôn 3 Thạch Hòa' },
+  { name: 'Hẻm Nướng 1978',                 phone: '0327127277', email: '',                               address: 'Thôn 3 Thạch Hòa' },
+  { name: 'Cơm Xe Tải Thanh Huyền',         phone: '0987746158', email: '',                               address: 'Gần ngã tư đhqg' },
+  { name: 'Cơm Nguyễn Tuấn',                phone: '0983556183', email: '',                               address: 'Ngã 3 Hòa lạc' },
+  { name: 'Cơm Tấm Chính Lan 1998',         phone: '0368466998', email: '',                               address: 'Tân Xã - Hòa Lạc' },
+  { name: 'Thiên Ban Quán Bún Cá Cay',      phone: '0968860363', email: '',                               address: 'tân Xã - Hòa Lạc' },
+  { name: 'Mây Quán',                       phone: '0862261226', email: '',                               address: 'đường hoàng tùng, lê trọng tấn, an khánh hà nội' },
+  { name: 'Tiêm Cơm Gia Đinh Hà Đông',      phone: '0965730550', email: '',                               address: 'Khu B Geleximco, Lê Trọng Tấn, An Khánh, Hà Nội' },
+  { name: 'Cơm Ngon Anh Béo',               phone: '0968251516', email: '',                               address: 'Khu B Geleximco, An Khánh, Hà Nội' },
+  { name: 'Tiệm Cơm Nàng Tấm',              phone: '0839103388', email: '',                               address: 'Khu đô thị Geleximco, Lê Trọng Tấn, Tây Mỗ, Hà Nội' },
+  { name: 'Bún Đậu Thủy Gà',                phone: '0985102468', email: '',                               address: '201 Lê Trọng Tấn, La Dương, Dương Nội, Hà Nội' },
+  { name: 'Tít Thò Lò',                     phone: '0972895533', email: '',                               address: '18AB, Dương Nội, Hà Nội' },
+  { name: 'Cháo Mr.Bean',                   phone: '0862655924', email: '',                               address: 'Lê Giản, Đại Mỗ, Hà Nội, Vietnam' },
+  { name: 'Tiệm Bánh Thu Trang',            phone: '0936290932', email: '',                               address: '49 P. Ngọc Trục, làng Ngọc Trục, Đại Mỗ, Hà Nội' },
+  { name: "MỲ CAY LA'CA",                   phone: '0989251931', email: '',                               address: '40 P. Ngọc Trục, làng Ngọc Trục, Đại Mỗ, Hà Nội' },
+  { name: 'Chân Gà Sốt Thái MeeChang',      phone: '0336789071', email: '',                               address: '93 Ngọc Trục, làng Ngọc Trục, Đại Mỗ, Hà Nội' },
+  { name: 'Chất Lẩu Nướng Buffet',          phone: '0969158193', email: '',                               address: '48 Vườn Cam, Từ Liêm, Hà Nội' },
+  { name: 'Quán nhậu Trang Trẻ Trâu',       phone: '0968598771', email: '',                               address: '6 P. Hồng Đô, làng Phú Đô, Từ Liêm, Hà Nội' },
+  { name: 'Bia hơi minh tâm',               phone: '0836484333', email: '',                               address: '31 Đ. Mễ Trì, Từ Liêm, Hà Nội' },
+  { name: 'Phở Thìn Mỹ Đình',               phone: '02432006379', email: '',                               address: 'CT9 Mỹ Đình Sông Đà, Từ Liêm, Hà Nội' },
+  { name: 'Quán Tươi',                      phone: '0974356725', email: '',                               address: '3 Ngõ 123 Trung Kính, Yên Hòa, Hà Nội' },
+  { name: 'Cơm Văn Đô Trung Kính',          phone: '0356922789', email: '',                               address: '58 P. Trung Kính, Yên Hòa, Hà Nội' },
+  { name: 'KienKo Kitchen',                 phone: '0779222029', email: '',                               address: '34 P. Trung Kính, Yên Hòa, Hà Nội' },
+  { name: 'Bún riêu tóp mỡ 37',             phone: '0961013130', email: '',                               address: '67 P. Trung Kính, Yên Hòa, Hà Nội' },
+  { name: 'Đụt Quán',                       phone: '0868128180', email: '',                               address: '5 Ngõ 41 Trần Duy Hưng, Yên Hòa, Hà Nội' },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let apiBase    = localStorage.getItem('adminTool_api') || '';
+let appBaseUrl = localStorage.getItem('adminTool_app') || '';
+let currentToken = '';
+let currentPhone = '';
+
+// Restore tokens từ localStorage (tồn tại giữa các lần mở tool)
+let loggedInTokens = {};
+try {
+  const saved = localStorage.getItem('adminTool_tokens');
+  if (saved) loggedInTokens = JSON.parse(saved);
+} catch { loggedInTokens = {}; }
+
+function saveTokens() {
+  localStorage.setItem('adminTool_tokens', JSON.stringify(loggedInTokens));
+}
+
+function clearSessions() {
+  if (!confirm('Xóa tất cả phiên đăng nhập đã lưu?')) return;
+  loggedInTokens = {};
+  saveTokens();
+  stopKeepAlive();
+  document.getElementById('keepAliveBanner').style.display = 'none';
+  renderGrid();
+  showToast('info', '🗑️', 'Đã xóa tất cả phiên lưu.');
+}
+
+// ── Auto Daily Scheduler ──────────────────────────────────────────────────────
+const SCHED_KEY_PREFIX = 'adminTool_sched_';
+let schedInterval = null;
+let schedCheckInterval = null;
+let schedRunning = false;
+
+// Lưu/đọc dữ liệu ngày của scheduler
+function getSchedDateKey() {
+  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function getSchedData() {
+  try {
+    const raw = localStorage.getItem(SCHED_KEY_PREFIX + getSchedDateKey());
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveSchedData(data) {
+  localStorage.setItem(SCHED_KEY_PREFIX + getSchedDateKey(), JSON.stringify(data));
+  // Dọn dữ liệu cũ hơn 3 ngày
+  const today = getSchedDateKey();
+  for (let i = 4; i <= 30; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const old = d.toISOString().slice(0, 10);
+    localStorage.removeItem(SCHED_KEY_PREFIX + old);
+  }
+}
+
+// Sinh giờ đăng nhập random trong khoảng [from, to] giờ
+function genRandomLoginTime(fromH, toH) {
+  const from = Math.min(fromH, toH);
+  const to   = Math.max(fromH, toH);
+  const now = new Date();
+  const h   = from + Math.floor(Math.random() * (to - from + 1));
+  const m   = Math.floor(Math.random() * 60);
+  const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+  // Nếu giờ random đã qua → dùng ngay bây giờ + 2 phút
+  if (target <= now) {
+    return new Date(now.getTime() + 2 * 60 * 1000);
+  }
+  return target;
+}
+
+function schedGetConfig() {
+  const fromH = parseInt(document.getElementById('schedHourFrom')?.value || '6');
+  const toH   = parseInt(document.getElementById('schedHourTo')?.value   || '9');
+  const minH  = parseInt(document.getElementById('schedMinHours')?.value || '8');
+  return { fromH, toH, minH };
+}
+
+function toggleSchedulerPanel() {
+  const panel = document.getElementById('schedulerPanel');
+  const isHidden = panel.style.display === 'none';
+  panel.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) updateSchedUI();
+}
+
+function startScheduler() {
+  if (schedRunning) return;
+  schedRunning = true;
+  localStorage.setItem('adminTool_schedRunning', '1');
+  updateSchedUI();
+
+  // Kiểm tra mỗi 30 giây xem có cần thực hiện gì không
+  schedCheckInterval = setInterval(schedTick, 30000);
+  schedTick(); // Chạy ngay lần đầu
+  showToast('success', '🗓️', 'Auto Daily Scheduler đã bật!');
+}
+
+function stopScheduler() {
+  schedRunning = false;
+  localStorage.setItem('adminTool_schedRunning', '0');
+  if (schedCheckInterval) { clearInterval(schedCheckInterval); schedCheckInterval = null; }
+  const dot = document.getElementById('schedStatusDot');
+  if (dot) { dot.textContent = '⏸ Đã dừng'; dot.style.color = 'var(--muted)'; dot.style.borderColor = 'var(--border)'; dot.style.background = 'rgba(167,139,250,0.05)'; }
+  const line = document.getElementById('schedStatusLine');
+  if (line) line.textContent = '■ Scheduler đã dừng.';
+  showToast('info', '■', 'Auto Daily Scheduler đã tắt.');
+}
+
+async function schedTick() {
+  if (!schedRunning) return;
+  const now = new Date();
+  const data = getSchedData();
+  const { fromH, toH, minH } = schedGetConfig();
+
+  // 1. Kiểm tra nếu hôm nay chưa đăng nhập → lên lịch / chạy đăng nhập
+  if (!data.loginDoneAt) {
+    // Tạo giờ target nếu chưa có
+    if (!data.loginTargetTime) {
+      const target = genRandomLoginTime(fromH, toH);
+      data.loginTargetTime = target.toISOString();
+      saveSchedData(data);
+    }
+    const target = new Date(data.loginTargetTime);
+    if (now >= target) {
+      // Đến giờ → đăng nhập tất cả
+      await schedDoLogin(data);
+    } else {
+      // Chưa đến giờ → cập nhật UI thôi
+      updateSchedUI();
+    }
+    return;
+  }
+
+  // 2. Đã đăng nhập → theo dõi thời gian online
+  // Cộng thời gian từ lần check trước
+  const lastCheck = data.lastCheckAt ? new Date(data.lastCheckAt) : new Date(data.loginDoneAt);
+  const elapsedMs = now - lastCheck;
+  const elapsedMin = elapsedMs / 60000;
+
+  if (!data.onlineMinutes) data.onlineMinutes = {};
+  const phones = Object.keys(loggedInTokens);
+  for (const phone of phones) {
+    if (!isTokenExpired(loggedInTokens[phone])) {
+      data.onlineMinutes[phone] = (data.onlineMinutes[phone] || 0) + elapsedMin;
+    }
+  }
+  data.lastCheckAt = now.toISOString();
+
+  // 3. Kiểm tra user nào chưa đủ minH giờ và token hết hạn → re-login
+  const minMinutes = minH * 60;
+  for (const u of USERS) {
+    const mins = data.onlineMinutes[u.phone] || 0;
+    if (mins < minMinutes && isTokenExpired(loggedInTokens[u.phone] || '')) {
+      try {
+        await loginUser(u.phone, u.name, true);
+        showToast('info', '🔄', `Re-login: ${u.name} (chưa đủ ${minH}h)`);
+      } catch (e) {
+        console.warn('schedTick re-login failed:', u.phone, e.message);
+      }
+    }
+  }
+
+  saveSchedData(data);
+  updateSchedUI();
+}
+
+async function schedDoLogin(data) {
+  if (!apiBase) {
+    showToast('error', '⚠️', 'Scheduler: Chưa có API URL!');
+    return;
+  }
+  const dot  = document.getElementById('schedStatusDot');
+  const line = document.getElementById('schedStatusLine');
+  if (dot)  { dot.textContent = '⏳ Đang đăng nhập...'; dot.style.color = '#F59E0B'; dot.style.borderColor = '#F59E0B'; }
+  if (line) line.textContent = `⏳ Đang đăng nhập ${USERS.length} user...`;
+
+  let ok = 0, fail = 0;
+  for (const u of USERS) {
+    try {
+      await loginUser(u.phone, u.name, true);
+      ok++;
+    } catch { fail++; }
+    // Delay nhỏ để không spam API
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  data.loginDoneAt    = new Date().toISOString();
+  data.lastCheckAt    = data.loginDoneAt;
+  data.onlineMinutes  = {};
+  for (const phone of Object.keys(loggedInTokens)) {
+    data.onlineMinutes[phone] = 0;
+  }
+  saveSchedData(data);
+  renderGrid();
+
+  const { fromH, toH } = schedGetConfig();
+  // Lên lịch đăng nhập cho ngày mai
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowKey = tomorrow.toISOString().slice(0, 10);
+  const tmTarget = genRandomLoginTime(fromH, toH);
+  // Lưu cho ngày mai
+  const tmData = { loginTargetTime: new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), tmTarget.getHours(), tmTarget.getMinutes()).toISOString() };
+  localStorage.setItem(SCHED_KEY_PREFIX + tomorrowKey, JSON.stringify(tmData));
+
+  showToast('success', '🗓️', `Scheduler: ${ok} đăng nhập thành công, ${fail} lỗi.`);
+  updateSchedUI();
+}
+
+async function schedRunNow() {
+  if (!apiBase) { showToast('error', '⚠️', 'Chưa có API URL!'); return; }
+  const data = getSchedData();
+  data.loginTargetTime = new Date().toISOString(); // Đặt target = bây giờ
+  saveSchedData(data);
+  if (!schedRunning) startScheduler();
+  await schedDoLogin(data);
+}
+
+function updateSchedUI() {
+  const data = getSchedData();
+  const { minH } = schedGetConfig();
+  const minMinutes = minH * 60;
+
+  // Status dot
+  const dot  = document.getElementById('schedStatusDot');
+  const line = document.getElementById('schedStatusLine');
+  if (dot && schedRunning && data.loginDoneAt) {
+    dot.textContent = '🟢 Đang chạy';
+    dot.style.color = 'var(--accent)';
+    dot.style.borderColor = 'var(--accent)';
+    dot.style.background = 'rgba(0,229,160,0.1)';
+  } else if (dot && schedRunning) {
+    dot.textContent = '⏳ Chờ đăng nhập';
+    dot.style.color = '#F59E0B';
+    dot.style.borderColor = '#F59E0B';
+    dot.style.background = 'rgba(245,158,11,0.1)';
+  }
+
+  // Next login time
+  const nextEl = document.getElementById('schedNextLogin');
+  if (nextEl) {
+    if (data.loginTargetTime && !data.loginDoneAt) {
+      const t = new Date(data.loginTargetTime);
+      nextEl.textContent = t.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    } else if (data.loginDoneAt) {
+      // Ngày mai
+      const tmKey = (() => { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); })();
+      try {
+        const tmData = JSON.parse(localStorage.getItem(SCHED_KEY_PREFIX + tmKey) || '{}');
+        if (tmData.loginTargetTime) {
+          const t = new Date(tmData.loginTargetTime);
+          nextEl.textContent = 'Mai ' + t.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        } else nextEl.textContent = '—';
+      } catch { nextEl.textContent = '—'; }
+    } else nextEl.textContent = '—';
+  }
+
+  // Stats
+  const onlineMins = data.onlineMinutes || {};
+  let doneCount = 0, onlineCount = 0;
+  for (const u of USERS) {
+    const mins = onlineMins[u.phone] || 0;
+    if (mins >= minMinutes) doneCount++;
+    if (loggedInTokens[u.phone] && !isTokenExpired(loggedInTokens[u.phone])) onlineCount++;
+  }
+  const doneEl   = document.getElementById('schedDoneCount');
+  const onlineEl = document.getElementById('schedOnlineCount');
+  const totalEl  = document.getElementById('schedTotalCount');
+  if (doneEl)   doneEl.textContent   = doneCount;
+  if (onlineEl) onlineEl.textContent = onlineCount;
+  if (totalEl)  totalEl.textContent  = USERS.length;
+
+  // Status line
+  if (line && data.loginDoneAt) {
+    const loginAt = new Date(data.loginDoneAt).toLocaleTimeString('vi-VN');
+    line.textContent = `✅ Đã đăng nhập lúc ${loginAt} — ${doneCount}/${USERS.length} user đạt ${minH}h online hôm nay`;
+  } else if (line && data.loginTargetTime) {
+    const t = new Date(data.loginTargetTime);
+    line.textContent = `⏰ Dự kiến đăng nhập lúc ${t.toLocaleTimeString('vi-VN')} hôm nay`;
+  }
+
+  // Update per-user online mini-bar trên card (nếu đang hiển thị)
+  for (const u of USERS) {
+    const mins = onlineMins[u.phone] || 0;
+    const pct  = Math.min(100, (mins / minMinutes) * 100);
+    const barEl = document.getElementById(`online-fill-${u.phone}`);
+    const lblEl = document.getElementById(`online-label-${u.phone}`);
+    if (barEl) barEl.style.width = pct + '%';
+    if (lblEl) {
+      const h = Math.floor(mins / 60);
+      const m = Math.round(mins % 60);
+      lblEl.textContent = `${h}h${m}m / ${minH}h`;
+      lblEl.parentElement.className = 'user-online-label' + (mins >= minMinutes ? ' done' : '');
+    }
+  }
+}
+
+// Auto-refresh scheduler UI mỗi 60 giây nếu panel đang mở
+setInterval(() => {
+  const panel = document.getElementById('schedulerPanel');
+  if (panel && panel.style.display !== 'none') updateSchedUI();
+}, 60000);
+
+// ── Keep Alive / Duy trì đăng nhập ───────────────────────────────────────────
+let keepAliveInterval = null;
+let isPinging = false;
+
+function startKeepAlive() {
+  if (keepAliveInterval) clearInterval(keepAliveInterval);
+  
+  // Chạy lần đầu ngay lập tức
+  pingKeepAlive();
+  
+  // Chạy định kỳ mỗi 45 giây
+  keepAliveInterval = setInterval(pingKeepAlive, 45000);
+}
+
+function stopKeepAlive() {
+  if (keepAliveInterval) {
+    clearInterval(keepAliveInterval);
+    keepAliveInterval = null;
+  }
+  const statusEl = document.getElementById('keepAliveStatus');
+  if (statusEl) {
+    statusEl.innerHTML = `🔴 Đã tắt tự động duy trì đăng nhập`;
+  }
+}
+
+function toggleKeepAlive(enabled) {
+  if (enabled) {
+    startKeepAlive();
+  } else {
+    stopKeepAlive();
+  }
+}
+
+// Lưu trạng thái scheduler khi start/stop
+function _persistSchedState(val) {
+  localStorage.setItem('adminTool_schedRunning', val ? '1' : '0');
+}
+
+function triggerPingNow() {
+  pingKeepAlive();
+}
+
+async function pingKeepAlive() {
+  if (isPinging) return;
+  const phones = Object.keys(loggedInTokens);
+  if (phones.length === 0) {
+    stopKeepAlive();
+    document.getElementById('keepAliveBanner').style.display = 'none';
+    return;
+  }
+  if (!apiBase) return;
+
+  isPinging = true;
+  const btn = document.getElementById('btnPingNow');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Đang ping...';
+  }
+
+  const statusEl = document.getElementById('keepAliveStatus');
+  if (statusEl) {
+    statusEl.innerHTML = `⏳ Đang gửi ping duy trì hoạt động cho ${phones.length} tài khoản...`;
+  }
+
+  let successCount = 0;
+  let expiredCount = 0;
+
+  for (const phone of phones) {
+    const token = loggedInTokens[phone];
+    if (isTokenExpired(token)) {
+      delete loggedInTokens[phone];
+      expiredCount++;
+      continue;
+    }
+
+    try {
+      const res = await fetch(`${apiBase}/auth/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        successCount++;
+        const card = document.getElementById(`card-${phone}`);
+        if (card) {
+          card.classList.add('ping-success');
+          setTimeout(() => card.classList.remove('ping-success'), 1000);
+        }
+      } else if (res.status === 401 || res.status === 403) {
+        delete loggedInTokens[phone];
+        expiredCount++;
+      }
+    } catch (err) {
+      console.warn(`[Keep-alive] Lỗi ping ${phone}:`, err);
+    }
+    // Chờ 150ms để không spam server
+    await new Promise(r => setTimeout(r, 150));
+  }
+
+  if (expiredCount > 0) {
+    saveTokens();
+    renderGrid();
+    showToast('info', '⚠️', `Đã xóa ${expiredCount} phiên hết hạn hoặc không hợp lệ.`);
+  }
+
+  isPinging = false;
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '⚡ Ping ngay';
+  }
+
+  const keepAliveTime = new Date().toLocaleTimeString('vi-VN');
+  if (statusEl) {
+    statusEl.innerHTML = `🟢 <strong>Duy trì hoạt động:</strong> Ping cuối: ${keepAliveTime} • Thành công: <span style="color:var(--accent);font-weight:600">${successCount}/${phones.length}</span>`;
+  }
+}
+
+function checkAndEnableKeepAlive() {
+  const phones = Object.keys(loggedInTokens);
+  if (phones.length > 0) {
+    document.getElementById('keepAliveBanner').style.display = 'flex';
+    if (document.getElementById('keepAliveToggle').checked) {
+      startKeepAlive();
+    }
+  }
+}
+
+// Kiểm tra JWT có hết hạn chưa (decode payload không cần verify signature)
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp && Date.now() / 1000 > payload.exp;
+  } catch { return true; }
+}
+
+function getTokenExpiry(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (!payload.exp) return null;
+    return new Date(payload.exp * 1000);
+  } catch { return null; }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('apiUrl').value  = apiBase;
+  document.getElementById('appUrl').value  = appBaseUrl;
+  document.getElementById('countTotal').textContent = USERS.length;
+
+  // Dọn token hết hạn khỏi bộ nhớ
+  let expiredCount = 0;
+  for (const phone of Object.keys(loggedInTokens)) {
+    if (isTokenExpired(loggedInTokens[phone])) {
+      delete loggedInTokens[phone];
+      expiredCount++;
+    }
+  }
+  if (expiredCount > 0) {
+    saveTokens();
+    showToast('info', '⚠️', `Đã xóa ${expiredCount} token hết hạn.`);
+  }
+
+  const restoredCount = Object.keys(loggedInTokens).length;
+  if (restoredCount > 0) {
+    showToast('success', '🔑', `Khôi phục ${restoredCount} phiên đăng nhập từ lần trước!`);
+    checkAndEnableKeepAlive();
+  }
+
+  // Khôi phục scheduler nếu đang chạy
+  const schedWasRunning = localStorage.getItem('adminTool_schedRunning') === '1';
+  if (schedWasRunning) {
+    startScheduler();
+    document.getElementById('schedulerPanel').style.display = 'block';
+    showToast('info', '🗓️', 'Scheduler đã được khôi phục tự động!');
+  }
+
+  renderGrid();
+  if (apiBase) pingApi();
+});
+
+
+// ── Config ────────────────────────────────────────────────────────────────────
+function normalizeUrl(url) {
+  url = url.trim().replace(/\/$/, '');
+  if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
+  }
+  return url;
+}
+
+function saveConfig() {
+  apiBase    = normalizeUrl(document.getElementById('apiUrl').value);
+  appBaseUrl = normalizeUrl(document.getElementById('appUrl').value);
+  // Cập nhật lại input để user thấy URL đã được chuẩn hoá
+  document.getElementById('apiUrl').value  = apiBase;
+  document.getElementById('appUrl').value  = appBaseUrl;
+  localStorage.setItem('adminTool_api', apiBase);
+  localStorage.setItem('adminTool_app', appBaseUrl);
+  pingApi();
+}
+
+async function pingApi() {
+  if (!apiBase) {
+    showToast('error', '⚠️', 'Vui lòng nhập API URL trước!');
+    return;
+  }
+  const badge = document.getElementById('statusBadge');
+  badge.textContent = '🟡 Đang kiểm tra...';
+  badge.style.color = '#F59E0B';
+  badge.style.borderColor = '#F59E0B';
+  badge.style.background = 'rgba(245,158,11,0.1)';
+  try {
+    // Health endpoint nằm ở gốc (không có /api/v1)
+    const base = apiBase.replace(/\/api\/v1$/, '');
+    const res = await fetch(`${base}/health`, { signal: AbortSignal.timeout(6000) });
+    if (res.ok) {
+      badge.textContent = '🟢 Đã kết nối';
+      badge.style.color = '#00E5A0';
+      badge.style.borderColor = '#00E5A0';
+      badge.style.background = 'rgba(0,229,160,0.1)';
+      showToast('success', '✅', `Kết nối thành công: ${base}`);
+    } else {
+      throw new Error(`Server phản hồi lỗi ${res.status}`);
+    }
+  } catch (err) {
+    badge.textContent = '🔴 Lỗi kết nối';
+    badge.style.color = '#EF4444';
+    badge.style.borderColor = '#EF4444';
+    badge.style.background = 'rgba(239,68,68,0.1)';
+    const msg = err.name === 'TimeoutError'
+      ? 'Timeout — Server không phản hồi sau 6 giây'
+      : err.message || 'Không thể kết nối';
+    showToast('error', '❌', `Lỗi: ${msg}`);
+  }
+}
+
+// ── Grid render ───────────────────────────────────────────────────────────────
+function renderGrid() {
+  const q     = document.getElementById('searchInput').value.toLowerCase();
+  const grid  = document.getElementById('grid');
+  const filtered = q
+    ? USERS.filter(u =>
+        u.name.toLowerCase().includes(q) ||
+        u.phone.includes(q) ||
+        u.address.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q)
+      )
+    : USERS;
+
+  document.getElementById('countVisible').textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">Không tìm thấy kết quả</div>
+        <div class="empty-sub">Thử từ khoá khác</div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(u => cardHTML(u)).join('');
+}
+
+function avatarChar(name) {
+  return name.trim()[0].toUpperCase();
+}
+
+function cardHTML(u) {
+  const isLoggedIn = !!loggedInTokens[u.phone];
+  let expiryHtml = '';
+  if (isLoggedIn) {
+    const exp = getTokenExpiry(loggedInTokens[u.phone]);
+    if (exp) {
+      const daysLeft = Math.ceil((exp - Date.now()) / 86400000);
+      const warn = daysLeft <= 3;
+      expiryHtml = `<div class="token-expiry${warn ? ' warn' : ''}">
+        🔑 Hết hạn: ${exp.toLocaleDateString('vi-VN')} (còn ${daysLeft} ngày)
+      </div>`;
+    }
+  }
+
+  // Online time mini-bar (nếu scheduler đang chạy)
+  let onlineBarHtml = '';
+  const schedPanel = document.getElementById('schedulerPanel');
+  if (schedRunning || (schedPanel && schedPanel.style.display !== 'none')) {
+    const data = getSchedData();
+    const { minH } = schedGetConfig();
+    const minMinutes = minH * 60;
+    const mins = (data.onlineMinutes || {})[u.phone] || 0;
+    const pct  = Math.min(100, (mins / minMinutes) * 100);
+    const h = Math.floor(mins / 60);
+    const m = Math.round(mins % 60);
+    const done = mins >= minMinutes;
+    onlineBarHtml = `
+    <div class="user-online-bar">
+      <div class="user-online-label${done ? ' done' : ''}">
+        <span>🕐 Online hôm nay</span>
+        <span id="online-label-${u.phone}">${h}h${m}m / ${minH}h</span>
+      </div>
+      <div class="user-online-track">
+        <div class="user-online-fill" id="online-fill-${u.phone}" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }
+
+  return `
+  <div class="user-card${isLoggedIn ? ' logged-in' : ''}" id="card-${u.phone}">
+    ${isLoggedIn ? '<span class="status-ok">✓ Online</span>' : ''}
+    <div class="card-top">
+      <div class="avatar">${avatarChar(u.name)}</div>
+      <div class="card-info">
+        <div class="card-name" title="${u.name}">${u.name}</div>
+        <div class="card-phone">${u.phone}</div>
+        ${expiryHtml}
+      </div>
+    </div>
+
+    <div class="card-meta">
+      <div class="meta-row">
+        <span class="meta-icon">📍</span>
+        <span class="meta-text" title="${u.address}">${u.address || '—'}</span>
+      </div>
+      ${u.email ? `<div class="meta-row">
+        <span class="meta-icon">✉️</span>
+        <span class="meta-text">${u.email}</span>
+      </div>` : ''}
+    </div>
+
+    ${onlineBarHtml}
+
+    <div class="creds-row">
+      <div class="cred-chip" onclick="copyText('${u.phone}', 'Mã đăng nhập')" title="Click để copy">
+        <div>
+          <div class="cred-label">Mã đăng nhập</div>
+          <div class="cred-value">${u.phone}</div>
+        </div>
+        <span class="copy-icon">📋</span>
+      </div>
+      <div class="cred-chip" onclick="copyText('${u.phone}', 'Mật khẩu')" title="Mật khẩu = SĐT">
+        <div>
+          <div class="cred-label">Mật khẩu</div>
+          <div class="cred-value">••••••••</div>
+        </div>
+        <span class="copy-icon">📋</span>
+      </div>
+    </div>
+
+    <div class="card-actions">
+      <button class="btn-login${isLoggedIn ? '' : ''}"
+        id="btn-${u.phone}"
+        onclick="loginUser('${u.phone}', '${u.name.replace(/'/g, "\\'")}')">
+        ${isLoggedIn ? '🔄 Đăng nhập lại' : '🚀 Đăng nhập'}
+      </button>
+      ${isLoggedIn ? `<button class="btn-open" onclick="openApp('${u.phone}')" title="Mở App">↗</button>` : ''}
+    </div>
+  </div>`;
+}
+
+// ── Login ─────────────────────────────────────────────────────────────────────
+async function loginUser(phone, name, silent = false) {
+  if (!apiBase) {
+    if (!silent) showToast('error', '⚠️', 'Chưa cấu hình API URL!');
+    throw new Error('No API URL');
+  }
+
+  const btn = document.getElementById(`btn-${phone}`);
+  if (btn && !silent) { btn.disabled = true; btn.textContent = '⏳ Đang đăng nhập...'; }
+
+  const res = await fetch(`${apiBase}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ taxCode: phone, password: phone }),
+  });
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(data.error || `Lỗi ${res.status}`);
+
+  const token = data.token;
+  loggedInTokens[phone] = token;
+  saveTokens(); // Persist ngay sau khi login
+  currentToken = token;
+  currentPhone = phone;
+  checkAndEnableKeepAlive();
+
+  if (!silent) {
+    showToast('success', '✅', `Đăng nhập thành công: ${name}`);
+    renderGrid();
+    openModal(name, phone, token);
+  }
+  return token;
+}
+
+// ── Login ALL ─────────────────────────────────────────────────────────────────
+async function loginAllUsers() {
+  if (!apiBase) { showToast('error', '⚠️', 'Chưa cấu hình API URL!'); return; }
+
+  const btnAll = document.getElementById('btnLoginAll');
+  btnAll.disabled = true;
+  btnAll.textContent = '⏳ Đang xử lý...';
+
+  const wrap  = document.getElementById('progressWrap');
+  const bar   = document.getElementById('progressBar');
+  const label = document.getElementById('progressLabel');
+  const stat  = document.getElementById('progressStat');
+  const detail= document.getElementById('progressDetail');
+
+  wrap.style.display = 'block';
+  const total = USERS.length;
+  let done = 0, success = 0, failed = 0;
+  const results = [];
+
+  for (const u of USERS) {
+    label.textContent = `Đang đăng nhập: ${u.name}`;
+    detail.textContent = `(${u.phone})`;
+    try {
+      await loginUser(u.phone, u.name, true);
+      success++;
+      results.push({ ok: true, name: u.name, phone: u.phone });
+    } catch (err) {
+      failed++;
+      results.push({ ok: false, name: u.name, phone: u.phone, error: err.message });
+    }
+    done++;
+    const pct = Math.round((done / total) * 100);
+    bar.style.width = pct + '%';
+    stat.textContent = `${done} / ${total}`;
+  }
+
+  label.textContent = `✅ Hoàn thành!`;
+  detail.textContent = `${success} thành công • ${failed} thất bại`;
+  stat.textContent = `${success}/${total} ✔`;
+
+  btnAll.disabled = false;
+  btnAll.textContent = '⚡ Đăng nhập tất cả';
+
+  renderGrid();
+  openBulkModal(results, success, failed);
+}
+
+function openApp(phone) {
+  currentToken  = loggedInTokens[phone];
+  currentPhone  = phone;
+  launchApp();
+}
+
+function launchApp() {
+  if (!appBaseUrl) {
+    showToast('info', '⚠️', 'Chưa nhập App URL. Nhập URL và lưu lại!');
+    return;
+  }
+  const url = `${appBaseUrl}?token=${encodeURIComponent(currentToken)}&autoLogin=1`;
+  window.open(url, '_blank');
+  showToast('info', '↗', 'Đã mở App trong tab mới. Nếu App chưa hỗ trợ auto-login, hãy copy token!');
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal(name, phone, token) {
+  document.getElementById('modalTitle').textContent = `✅ ${name}`;
+  document.getElementById('modalSub').textContent   = `SĐT/taxCode: ${phone} — Token JWT sẵn sàng`;
+  document.getElementById('tokenBox').textContent   = token;
+  document.getElementById('modal').style.display   = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+function copyTokenAndOpen() {
+  navigator.clipboard.writeText(currentToken).then(() => {
+    showToast('success', '📋', 'Đã copy token vào clipboard!');
+  });
+  closeModal();
+  if (appBaseUrl) launchApp();
+}
+
+// Đóng modal khi click ngoài
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.getElementById('modalBulk').addEventListener('click', function(e) {
+  if (e.target === this) closeBulkModal();
+});
+
+// ── Bulk Modal ────────────────────────────────────────────────────────────────
+function openBulkModal(results, success, failed) {
+  document.getElementById('bulkTitle').textContent =
+    failed === 0 ? `⚡ Đã đăng nhập ${success}/${results.length} user!` : `⚡ Kết quả: ${success} ✅ ${failed} ❌`;
+  document.getElementById('bulkSub').textContent =
+    failed === 0
+      ? 'Tất cả token đã sẵn sàng. Xuất file JSON để lưu lại.'
+      : `${failed} tài khoản gặp lỗi — kiểm tra API hoặc thông tin đăng nhập.`;
+
+  const grid = document.getElementById('bulkResultGrid');
+  grid.innerHTML = results.map(r => `
+    <div class="bulk-row ${r.ok ? 'ok' : 'err'}">
+      <span class="bulk-icon">${r.ok ? '✅' : '❌'}</span>
+      <span class="bulk-name">${r.name}</span>
+      <span class="bulk-phone">${r.phone}</span>
+      ${!r.ok ? `<span class="bulk-err-msg">${r.error}</span>` : ''}
+    </div>`).join('');
+
+  document.getElementById('modalBulk').style.display = 'flex';
+}
+
+function closeBulkModal() {
+  document.getElementById('modalBulk').style.display = 'none';
+}
+
+function exportTokens() {
+  const data = Object.entries(loggedInTokens).map(([phone, token]) => {
+    const user = USERS.find(u => u.phone === phone);
+    return { name: user?.name || phone, phone, token };
+  });
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `atroo-tokens-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('success', '📥', `Đã xuất ${data.length} token ra file JSON!`);
+}
+
+// ── Add User Modal ────────────────────────────────────────────────────────────
+function openAddUserModal() {
+  // Reset form
+  ['newName','newPhone','newPassword','newAddress','newEmail'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  const errBox = document.getElementById('addUserError');
+  errBox.style.display = 'none';
+  errBox.textContent   = '';
+  const btn = document.getElementById('btnSubmitAddUser');
+  btn.disabled    = false;
+  btn.textContent = '➕ Tạo tài khoản';
+  document.getElementById('modalAddUser').style.display = 'flex';
+  setTimeout(() => document.getElementById('newName').focus(), 100);
+}
+
+function closeAddUserModal() {
+  document.getElementById('modalAddUser').style.display = 'none';
+}
+
+document.getElementById('modalAddUser').addEventListener('click', function(e) {
+  if (e.target === this) closeAddUserModal();
+});
+
+// Enter key submits form
+document.getElementById('modalAddUser').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT') submitAddUser();
+});
+
+async function submitAddUser() {
+  const name     = document.getElementById('newName').value.trim();
+  const phone    = document.getElementById('newPhone').value.trim().replace(/[\s.]/g, '');
+  const password = document.getElementById('newPassword').value.trim() || phone;
+  const address  = document.getElementById('newAddress').value.trim();
+  const email    = document.getElementById('newEmail').value.trim();
+
+  const errBox = document.getElementById('addUserError');
+  const showErr = (msg) => { errBox.textContent = msg; errBox.style.display = 'block'; };
+
+  // Validate
+  if (!name)  { showErr('⚠️ Vui lòng nhập tên cửa hàng / quán.'); return; }
+  if (!phone) { showErr('⚠️ Vui lòng nhập số điện thoại.'); return; }
+  if (!/^\d{9,11}$/.test(phone)) { showErr('⚠️ Số điện thoại không hợp lệ (9–11 chữ số).'); return; }
+  if (USERS.find(u => u.phone === phone)) { showErr('⚠️ Số điện thoại này đã có trong danh sách tool!'); return; }
+  if (!apiBase) { showErr('⚠️ Chưa cấu hình API URL. Lưu cấu hình trước!'); return; }
+
+  errBox.style.display = 'none';
+  const btn = document.getElementById('btnSubmitAddUser');
+  btn.disabled    = true;
+  btn.textContent = '⏳ Đang tạo...';
+
+  try {
+    // 1. Đăng ký tài khoản
+    const regRes = await fetch(`${apiBase}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taxCode: phone, businessName: name, password }),
+    });
+    const regData = await regRes.json();
+    if (!regRes.ok) throw new Error(regData.error || `Lỗi đăng ký ${regRes.status}`);
+
+    const token = regData.token;
+
+    // 2. Cập nhật profile (phone, address) nếu có
+    if (address || phone) {
+      await fetch(`${apiBase}/auth/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ businessName: name, phone, address: address || null }),
+      });
+    }
+
+    // 3. Thêm vào local list
+    const newUser = { name, phone, email, address };
+    USERS.push(newUser);
+    loggedInTokens[phone] = token;
+    saveTokens();
+    document.getElementById('countTotal').textContent = USERS.length;
+    checkAndEnableKeepAlive();
+
+    closeAddUserModal();
+    renderGrid();
+    showToast('success', '✅', `Đã tạo tài khoản: ${name}`);
+
+    // Mở modal hiển thị token
+    currentToken = token;
+    currentPhone = phone;
+    openModal(name, phone, token);
+
+  } catch (err) {
+    showErr(`❌ ${err.message}`);
+    btn.disabled    = false;
+    btn.textContent = '➕ Tạo tài khoản';
+  }
+}
+
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function copyText(text, label) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('success', '📋', `Đã copy ${label}: ${text}`);
+  }).catch(() => {
+    showToast('error', '❌', 'Không thể copy. Thử lại!');
+  });
+}
+
+function showToast(type, icon, msg) {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-msg">${msg}</span>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'fadeOut 0.3s cubic-bezier(0.4,0,0.2,1) forwards';
+    setTimeout(() => el.remove(), 300);
+  }, 3000);
+}
+</script>
+</body>
+</html>
