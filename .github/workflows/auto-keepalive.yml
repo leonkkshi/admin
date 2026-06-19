@@ -1,6 +1,8 @@
 name: 💓 Auto Keepalive — A Trợ Users
 
 on:
+  push:
+    branches: [ main ]
   schedule:
     # Chạy mỗi 5 phút, từ 23:00 UTC đến 16:55 UTC
     # = 6:00 SA đến 23:55 tối giờ Việt Nam (UTC+7)
