@@ -1,39 +1,23 @@
-name: 🔄 Auto Keepalive — A Trợ Users
+name: 💓 Auto Keepalive — A Trợ Users
 
 on:
   schedule:
-    # Chạy mỗi 30 phút, từ 23:00 UTC đến 16:00 UTC
-    # tương đương 6:00 SA đến 23:00 tối giờ Việt Nam (UTC+7)
-    - cron: '0,30 23 * * *'   # 6h00 & 6h30 SA VN
-    - cron: '0,30 0 * * *'    # 7h00 & 7h30 SA VN
-    - cron: '0,30 1 * * *'    # 8h00 & 8h30 SA VN
-    - cron: '0,30 2 * * *'    # 9h00 & 9h30 SA VN
-    - cron: '0,30 3 * * *'    # 10h & 10h30 VN
-    - cron: '0,30 4 * * *'    # 11h & 11h30 VN
-    - cron: '0,30 5 * * *'    # 12h & 12h30 VN
-    - cron: '0,30 6 * * *'    # 13h & 13h30 VN
-    - cron: '0,30 7 * * *'    # 14h & 14h30 VN
-    - cron: '0,30 8 * * *'    # 15h & 15h30 VN
-    - cron: '0,30 9 * * *'    # 16h & 16h30 VN
-    - cron: '0,30 10 * * *'   # 17h & 17h30 VN
-    - cron: '0,30 11 * * *'   # 18h & 18h30 VN
-    - cron: '0,30 12 * * *'   # 19h & 19h30 VN
-    - cron: '0,30 13 * * *'   # 20h & 20h30 VN
-    - cron: '0,30 14 * * *'   # 21h & 21h30 VN
-    - cron: '0,30 15 * * *'   # 22h & 22h30 VN
-    - cron: '0,30 16 * * *'   # 23h & 23h30 VN
-  workflow_dispatch:          # Cho phép chạy thủ công trên GitHub UI
+    # Chạy mỗi 5 phút, từ 23:00 UTC đến 16:55 UTC
+    # = 6:00 SA đến 23:55 tối giờ Việt Nam (UTC+7)
+    - cron: '*/5 23,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 * * *'
+
+  workflow_dispatch:       # Cho phép chạy thủ công trên GitHub UI
     inputs:
       login_only:
-        description: 'Chỉ đăng nhập, không ping keepalive'
+        description: 'Chỉ đăng nhập, không heartbeat'
         required: false
         default: 'false'
 
 jobs:
   keepalive:
-    name: Login & Keepalive All Users
+    name: Heartbeat All Users
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 8
 
     steps:
       - name: Checkout code
@@ -44,7 +28,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Run Auto Login & Keepalive
+      - name: Run Heartbeat
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
           LOGIN_ONLY: ${{ github.event.inputs.login_only || 'false' }}

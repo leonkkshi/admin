@@ -102,17 +102,19 @@ async function loginUser(user) {
       body: JSON.stringify({ taxCode: user.phone, password: user.phone }),
     });
     if (!ok) throw new Error(data.error || data.message || `HTTP ${status}`);
-    return { success: true, token: data.token };
+    return { success: true, token: data.token, sessionId: data.sessionId };
   } catch (err) {
     return { success: false, error: err.message };
   }
 }
 
-// ── Ping keepalive cho một user ───────────────────────────────────────────────
-async function pingUser(user, token) {
+// ── Heartbeat cho một user (cập nhật lastActiveAt + session duration) ─────────
+// Backend endpoint: PATCH /auth/session/heartbeat
+// Comment trong code: "Frontend gọi mỗi 5 phút để update thời gian session đang mở"
+async function heartbeatUser(user, token) {
   try {
-    const { ok, status } = await fetchJson(`${API_BASE}/auth/profile`, {
-      method: 'GET',
+    const { ok, status } = await fetchJson(`${API_BASE}/auth/session/heartbeat`, {
+      method: 'PATCH',
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!ok) return { success: false, error: `HTTP ${status}` };
@@ -155,23 +157,23 @@ async function main() {
   if (loginOnly) {
     console.log('ℹ️  LOGIN_ONLY=true, bỏ qua bước ping keepalive.');
   } else {
-    // ── Bước 2: Ping keepalive cho tất cả user đã login ────────────────────
-    console.log('📡 BƯỚC 2: Ping keepalive...\n');
+    // ── Bước 2: Gọi heartbeat cho tất cả user đã login ────────────────────
+    console.log('💓 BƯỚC 2: Gọi heartbeat (cập nhật lastActiveAt)...\n');
     const loggedPhones = Object.keys(tokens);
     for (const phone of loggedPhones) {
       const user = USERS.find((u) => u.phone === phone);
       const token = tokens[phone];
-      const result = await pingUser(user, token);
+      const result = await heartbeatUser(user, token);
       if (result.success) {
         results.pingOk++;
-        console.log(`  🟢 ${user.name.padEnd(35)} — ping OK`);
+        console.log(`  💓 ${user.name.padEnd(35)} — heartbeat OK`);
       } else {
         results.pingFail++;
         console.log(`  🔴 ${user.name.padEnd(35)} — ${result.error}`);
       }
       await sleep(150);
     }
-    console.log(`\n  → Ping: ${results.pingOk} thành công / ${results.pingFail} lỗi\n`);
+    console.log(`\n  → Heartbeat: ${results.pingOk} thành công / ${results.pingFail} lỗi\n`);
   }
 
   // ── Tổng kết ────────────────────────────────────────────────────────────────
@@ -179,7 +181,7 @@ async function main() {
   console.log(`✅ Hoàn thành!`);
   console.log(`   Login  : ${results.loginOk}/${USERS.length} thành công`);
   if (!loginOnly) {
-    console.log(`   Ping   : ${results.pingOk}/${results.loginOk} thành công`);
+    console.log(`   Heartbeat: ${results.pingOk}/${results.loginOk} thành công`);
   }
   console.log(`${'='.repeat(60)}\n`);
 
