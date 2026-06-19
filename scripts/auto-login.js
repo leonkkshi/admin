@@ -124,6 +124,18 @@ async function heartbeatUser(user, token) {
   }
 }
 
+// Kiểm tra JWT có hết hạn chưa (decode payload không cần verify signature)
+function isTokenExpired(token) {
+  if (!token) return true;
+  try {
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    // Hết hạn hoặc còn dưới 1 giờ
+    return payload.exp && (Date.now() / 1000) > (payload.exp - 3600);
+  } catch {
+    return true;
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
   const vnTime = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
@@ -134,60 +146,101 @@ async function main() {
   console.log(`${'='.repeat(60)}\n`);
 
   const loginOnly = process.env.LOGIN_ONLY === 'true';
-  const results = { loginOk: 0, loginFail: 0, pingOk: 0, pingFail: 0 };
-  const tokens = {};
-
-  // ── Bước 1: Đăng nhập tất cả user ──────────────────────────────────────────
-  console.log('📋 BƯỚC 1: Đăng nhập tất cả user...\n');
-  for (const user of USERS) {
-    const result = await loginUser(user);
-    if (result.success) {
-      tokens[user.phone] = result.token;
-      results.loginOk++;
-      console.log(`  ✅ ${user.name.padEnd(35)} (${user.phone})`);
-    } else {
-      results.loginFail++;
-      console.log(`  ❌ ${user.name.padEnd(35)} (${user.phone}) — ${result.error}`);
+  const results = { loginOk: 0, loginFail: 0, reusedOk: 0, pingOk: 0, pingFail: 0 };
+  
+  // Đọc file session-tokens.json lưu trữ từ các lần chạy trước
+  const fs = require('fs');
+  const path = require('path');
+  const tokenFilePath = path.join(process.cwd(), 'session-tokens.json');
+  let savedTokens = {};
+  
+  try {
+    if (fs.existsSync(tokenFilePath)) {
+      savedTokens = JSON.parse(fs.readFileSync(tokenFilePath, 'utf8'));
+      console.log(`🔑 Đã khôi phục session tokens lưu trữ từ session-tokens.json`);
     }
-    await sleep(250); // Delay 250ms giữa mỗi request để không spam API
+  } catch (err) {
+    console.log('⚠️ Không thể đọc file session-tokens.json:', err.message);
   }
 
-  console.log(`\n  → Đăng nhập: ${results.loginOk} thành công / ${results.loginFail} lỗi\n`);
+  // ── Xử lý cho từng user ────────────────────────────────────────────────────
+  for (const user of USERS) {
+    let token = savedTokens[user.phone];
+    let isReused = false;
 
-  if (loginOnly) {
-    console.log('ℹ️  LOGIN_ONLY=true, bỏ qua bước ping keepalive.');
-  } else {
-    // ── Bước 2: Gọi heartbeat cho tất cả user đã login ────────────────────
-    console.log('💓 BƯỚC 2: Gọi heartbeat (cập nhật lastActiveAt)...\n');
-    const loggedPhones = Object.keys(tokens);
-    for (const phone of loggedPhones) {
-      const user = USERS.find((u) => u.phone === phone);
-      const token = tokens[phone];
-      const result = await heartbeatUser(user, token);
-      if (result.success) {
-        results.pingOk++;
-        console.log(`  💓 ${user.name.padEnd(35)} — heartbeat OK`);
+    // Kiểm tra xem token cũ còn dùng được không
+    if (token && !isTokenExpired(token)) {
+      if (loginOnly) {
+        // Chỉ đăng nhập: nếu token chưa hết hạn thì coi như bỏ qua/hoàn thành
+        results.reusedOk++;
+        console.log(`  🔄 [Reused] ${user.name.padEnd(35)} (${user.phone}) — Token còn hiệu lực`);
+        continue;
       } else {
-        results.pingFail++;
-        console.log(`  🔴 ${user.name.padEnd(35)} — ${result.error}`);
+        // Gửi heartbeat thử bằng token cũ
+        const pingResult = await heartbeatUser(user, token);
+        if (pingResult.success) {
+          results.reusedOk++;
+          results.pingOk++;
+          console.log(`  💓 [Reused] ${user.name.padEnd(35)} (${user.phone}) — Heartbeat OK`);
+          isReused = true;
+        } else {
+          console.log(`  ⚠️ [Reused] ${user.name.padEnd(35)} (${user.phone}) — Heartbeat lỗi (${pingResult.error}), tiến hành đăng nhập lại...`);
+        }
       }
-      await sleep(150);
     }
-    console.log(`\n  → Heartbeat: ${results.pingOk} thành công / ${results.pingFail} lỗi\n`);
+
+    // Nếu không tái sử dụng được hoặc ping lỗi → đăng nhập mới
+    if (!isReused) {
+      const loginResult = await loginUser(user);
+      if (loginResult.success) {
+        token = loginResult.token;
+        savedTokens[user.phone] = token;
+        results.loginOk++;
+        console.log(`  ✅ [New Login] ${user.name.padEnd(35)} (${user.phone})`);
+        
+        // Nếu không phải chế độ chỉ login → gửi heartbeat lập tức
+        if (!loginOnly) {
+          const pingResult = await heartbeatUser(user, token);
+          if (pingResult.success) {
+            results.pingOk++;
+            console.log(`     └─ 💓 Heartbeat OK`);
+          } else {
+            results.pingFail++;
+            console.log(`     └─ 🔴 Heartbeat lỗi: ${pingResult.error}`);
+          }
+        }
+      } else {
+        results.loginFail++;
+        results.pingFail++;
+        console.log(`  ❌ [Failed] ${user.name.padEnd(35)} (${user.phone}) — Đăng nhập lỗi: ${loginResult.error}`);
+      }
+    }
+    
+    await sleep(250); // Delay nhẹ giữa mỗi user để tránh spam API
+  }
+
+  // Lưu lại token mới vào file session-tokens.json
+  try {
+    fs.writeFileSync(tokenFilePath, JSON.stringify(savedTokens, null, 2), 'utf8');
+    console.log('\n💾 Đã cập nhật và lưu session-tokens.json');
+  } catch (err) {
+    console.log('\n⚠️ Không thể ghi file session-tokens.json:', err.message);
   }
 
   // ── Tổng kết ────────────────────────────────────────────────────────────────
-  console.log(`${'='.repeat(60)}`);
+  console.log(`\n${'='.repeat(60)}`);
   console.log(`✅ Hoàn thành!`);
-  console.log(`   Login  : ${results.loginOk}/${USERS.length} thành công`);
+  console.log(`   Sử dụng lại token: ${results.reusedOk}/${USERS.length} user`);
+  console.log(`   Đăng nhập mới    : ${results.loginOk} thành công / ${results.loginFail} lỗi`);
   if (!loginOnly) {
-    console.log(`   Heartbeat: ${results.pingOk}/${results.loginOk} thành công`);
+    console.log(`   Heartbeat thành công: ${results.pingOk}/${USERS.length}`);
   }
   console.log(`${'='.repeat(60)}\n`);
 
-  // Exit với lỗi nếu quá nhiều user fail (để GitHub Actions đánh dấu job failed)
-  if (results.loginOk === 0) {
-    console.error('💥 Không đăng nhập được user nào! Kiểm tra API_BASE_URL và server.');
+  // Exit với lỗi nếu không giữ được user nào online (khi không phải chế độ LOGIN_ONLY)
+  const totalActive = results.reusedOk + results.loginOk;
+  if (totalActive === 0) {
+    console.error('💥 Lỗi: Không thể duy trì phiên hoạt động hoặc đăng nhập cho bất kỳ user nào!');
     process.exit(1);
   }
 }

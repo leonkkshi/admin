@@ -28,8 +28,23 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Restore Session Tokens Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: session-tokens.json
+          key: session-tokens-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            session-tokens-
+
       - name: Run Heartbeat
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
           LOGIN_ONLY: ${{ github.event.inputs.login_only || 'false' }}
         run: node scripts/auto-login.js
+
+      - name: Save Session Tokens Cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: session-tokens.json
+          key: session-tokens-${{ github.run_id }}-${{ github.run_attempt }}
