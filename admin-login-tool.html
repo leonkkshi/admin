@@ -653,17 +653,14 @@
 
     /* ── Keepalive Banner ── */
     .keepalive-banner {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r-card);
-      padding: 12px 20px;
-      margin-bottom: 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
       flex-wrap: wrap;
-      border-top: 2px solid var(--accent);
+      padding-top: 16px;
+      border-top: 1px dashed var(--border);
+      margin-top: 16px;
       animation: slideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .keepalive-status {
@@ -764,6 +761,50 @@
     @keyframes slideDown {
       from { transform: translateY(-15px); opacity: 0; }
       to   { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ── GA Boost ── */
+    .ga-boost-panel {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .ga-boost-status {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ga-boost-status strong { color: var(--text); }
+    .ga-boost-status .ga-count { color: #A78BFA; font-weight: 600; }
+    .ga-boost-progress {
+      flex: 1;
+      min-width: 120px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .ga-boost-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #A78BFA, #00E5A0);
+      border-radius: 99px;
+      transition: width 0.5s;
+    }
+    .ga-iframe-container {
+      position: fixed;
+      bottom: -10px;
+      left: -10px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
     }
 
     /* ── Form inside modal ── */
@@ -870,7 +911,7 @@
 
     <div class="sched-stat-row">
       <div class="sched-stat">
-        <div class="sched-stat-label">Đã đạt 8h hôm nay</div>
+        <div class="sched-stat-label">Đã đạt <span id="schedDoneHoursLabel">1</span>h hôm nay</div>
         <div class="sched-stat-value green" id="schedDoneCount">0</div>
       </div>
       <div class="sched-stat">
@@ -891,13 +932,44 @@
 
     <div class="sched-config-row">
       <span class="sched-config-label">⏰ Giờ đăng nhập mỗi ngày (random từ</span>
-      <input class="sched-time-input" id="schedHourFrom" type="number" min="0" max="23" value="6" title="Giờ bắt đầu" />
+      <input class="sched-time-input" id="schedHourFrom" type="number" min="0" max="23" value="6" title="Giờ bắt đầu" oninput="updateSchedUI()" />
       <span class="sched-sep">đến</span>
-      <input class="sched-time-input" id="schedHourTo" type="number" min="0" max="23" value="9" title="Giờ kết thúc" />
+      <input class="sched-time-input" id="schedHourTo" type="number" min="0" max="23" value="9" title="Giờ kết thúc" oninput="updateSchedUI()" />
       <span class="sched-sep">h)</span>
       <span class="sched-config-label" style="margin-left:12px">🕗 Min online/ngày</span>
-      <input class="sched-time-input" id="schedMinHours" type="number" min="1" max="24" value="8" title="Số giờ tối thiểu" />
+      <input class="sched-time-input" id="schedMinHours" type="number" min="1" max="24" value="1" title="Số giờ tối thiểu" oninput="updateSchedUI()" />
       <span class="sched-sep">giờ</span>
+      <span class="sched-config-label" style="margin-left:12px">👤 Số user random</span>
+      <input class="sched-time-input" id="schedUserCount" type="number" min="1" max="999" value="10" title="Số lượng user đăng nhập ngẫu nhiên" oninput="updateSchedUI()" />
+    </div>
+
+    <!-- Keepalive status banner -->
+    <div class="keepalive-banner" id="keepAliveBanner" style="display:none">
+      <div class="keepalive-status" id="keepAliveStatus">
+        🟢 Tự động duy trì đăng nhập đang hoạt động...
+      </div>
+      <div class="keepalive-actions">
+        <label class="switch-wrap" title="Tự động gửi request ping lên server để giữ các user luôn online">
+          <input type="checkbox" class="switch-input" id="keepAliveToggle" checked onchange="toggleKeepAlive(this.checked)" />
+          <span class="switch-slider"></span>
+          <span class="switch-label">Duy trì hoạt động</span>
+        </label>
+        <label class="switch-wrap" title="Tải frontend ẩn để Google Analytics ghi nhận traffic">
+          <input type="checkbox" class="switch-input" id="gaBoostToggle" onchange="toggleGABoost(this.checked)" />
+          <span class="switch-slider"></span>
+          <span class="switch-label">GA Boost</span>
+        </label>
+        <button class="btn-ping-now" id="btnPingNow" onclick="triggerPingNow()" title="Ping thủ công toàn bộ user lập tức">⚡ Ping ngay</button>
+      </div>
+    </div>
+    <!-- GA Boost panel -->
+    <div class="ga-boost-panel" id="gaBoostPanel" style="display:none">
+      <div class="ga-boost-status" id="gaBoostStatus">
+        📊 GA Boost: <span class="ga-count" id="gaBoostCount">0</span> / <span id="gaBoostTotal">0</span> users đã load frontend
+      </div>
+      <div class="ga-boost-progress">
+        <div class="ga-boost-bar" id="gaBoostBar" style="width:0%"></div>
+      </div>
     </div>
   </div>
 
@@ -911,21 +983,6 @@
       <div class="progress-bar" id="progressBar" style="width:0%"></div>
     </div>
     <div class="progress-detail" id="progressDetail"></div>
-  </div>
-
-  <!-- Keepalive status banner -->
-  <div class="keepalive-banner" id="keepAliveBanner" style="display:none">
-    <div class="keepalive-status" id="keepAliveStatus">
-      🟢 Tự động duy trì đăng nhập đang hoạt động...
-    </div>
-    <div class="keepalive-actions">
-      <label class="switch-wrap" title="Tự động gửi request ping lên server để giữ các user luôn online">
-        <input type="checkbox" class="switch-input" id="keepAliveToggle" checked onchange="toggleKeepAlive(this.checked)" />
-        <span class="switch-slider"></span>
-        <span class="switch-label">Duy trì hoạt động</span>
-      </label>
-      <button class="btn-ping-now" id="btnPingNow" onclick="triggerPingNow()" title="Ping thủ công toàn bộ user lập tức">⚡ Ping ngay</button>
-    </div>
   </div>
 
   <div class="grid" id="grid">
@@ -1139,7 +1196,9 @@ function schedGetConfig() {
   const fromH = parseInt(document.getElementById('schedHourFrom')?.value || '6');
   const toH   = parseInt(document.getElementById('schedHourTo')?.value   || '9');
   const minH  = parseInt(document.getElementById('schedMinHours')?.value || '8');
-  return { fromH, toH, minH };
+  let userCount = parseInt(document.getElementById('schedUserCount')?.value || USERS.length.toString());
+  if (isNaN(userCount) || userCount <= 0) userCount = USERS.length;
+  return { fromH, toH, minH, userCount };
 }
 
 function toggleSchedulerPanel() {
@@ -1188,7 +1247,7 @@ async function schedTick() {
     }
     const target = new Date(data.loginTargetTime);
     if (now >= target) {
-      // Đến giờ → đăng nhập tất cả
+      // Đến giờ → đăng nhập
       await schedDoLogin(data);
     } else {
       // Chưa đến giờ → cập nhật UI thôi
@@ -1205,16 +1264,22 @@ async function schedTick() {
 
   if (!data.onlineMinutes) data.onlineMinutes = {};
   const phones = Object.keys(loggedInTokens);
+  
+  // Chỉ cộng phút online cho những user được chọn hôm nay
+  const selectedPhones = data.selectedPhones || USERS.map(u => u.phone);
   for (const phone of phones) {
-    if (!isTokenExpired(loggedInTokens[phone])) {
+    if (selectedPhones.includes(phone) && !isTokenExpired(loggedInTokens[phone])) {
       data.onlineMinutes[phone] = (data.onlineMinutes[phone] || 0) + elapsedMin;
     }
   }
   data.lastCheckAt = now.toISOString();
 
-  // 3. Kiểm tra user nào chưa đủ minH giờ và token hết hạn → re-login
+  // 3. Kiểm tra user nào thuộc danh sách chọn chưa đủ minH giờ và token hết hạn → re-login
   const minMinutes = minH * 60;
-  for (const u of USERS) {
+  const selectedUsers = data.selectedPhones 
+    ? USERS.filter(u => data.selectedPhones.includes(u.phone))
+    : USERS;
+  for (const u of selectedUsers) {
     const mins = data.onlineMinutes[u.phone] || 0;
     if (mins < minMinutes && isTokenExpired(loggedInTokens[u.phone] || '')) {
       try {
@@ -1235,13 +1300,26 @@ async function schedDoLogin(data) {
     showToast('error', '⚠️', 'Scheduler: Chưa có API URL!');
     return;
   }
+  const { fromH, toH, minH, userCount } = schedGetConfig();
+
+  // Xác định/chọn danh sách user ngẫu nhiên cho ngày hôm nay
+  let selectedUsers = [];
+  if (data.selectedPhones && Array.isArray(data.selectedPhones)) {
+    selectedUsers = USERS.filter(u => data.selectedPhones.includes(u.phone));
+  } else {
+    const shuffled = [...USERS].sort(() => 0.5 - Math.random());
+    selectedUsers = shuffled.slice(0, Math.min(userCount, USERS.length));
+    data.selectedPhones = selectedUsers.map(u => u.phone);
+    saveSchedData(data);
+  }
+
   const dot  = document.getElementById('schedStatusDot');
   const line = document.getElementById('schedStatusLine');
   if (dot)  { dot.textContent = '⏳ Đang đăng nhập...'; dot.style.color = '#F59E0B'; dot.style.borderColor = '#F59E0B'; }
-  if (line) line.textContent = `⏳ Đang đăng nhập ${USERS.length} user...`;
+  if (line) line.textContent = `⏳ Đang đăng nhập ${selectedUsers.length} user được chọn...`;
 
   let ok = 0, fail = 0;
-  for (const u of USERS) {
+  for (const u of selectedUsers) {
     try {
       await loginUser(u.phone, u.name, true);
       ok++;
@@ -1259,7 +1337,6 @@ async function schedDoLogin(data) {
   saveSchedData(data);
   renderGrid();
 
-  const { fromH, toH } = schedGetConfig();
   // Lên lịch đăng nhập cho ngày mai
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1277,6 +1354,9 @@ async function schedRunNow() {
   if (!apiBase) { showToast('error', '⚠️', 'Chưa có API URL!'); return; }
   const data = getSchedData();
   data.loginTargetTime = new Date().toISOString(); // Đặt target = bây giờ
+  // Xóa danh sách đã chọn cũ để random lại danh sách mới theo cấu hình hiện tại
+  delete data.selectedPhones;
+  delete data.loginDoneAt;
   saveSchedData(data);
   if (!schedRunning) startScheduler();
   await schedDoLogin(data);
@@ -1284,8 +1364,11 @@ async function schedRunNow() {
 
 function updateSchedUI() {
   const data = getSchedData();
-  const { minH } = schedGetConfig();
+  const { fromH, toH, minH, userCount } = schedGetConfig();
   const minMinutes = minH * 60;
+
+  // Lưu cấu hình vào localStorage
+  localStorage.setItem('adminTool_schedConfig', JSON.stringify({ fromH, toH, minH, userCount }));
 
   // Status dot
   const dot  = document.getElementById('schedStatusDot');
@@ -1321,10 +1404,15 @@ function updateSchedUI() {
     } else nextEl.textContent = '—';
   }
 
+  // Xác định tập user được chọn cho ngày hôm nay
+  const activeUsers = data.selectedPhones 
+    ? USERS.filter(u => data.selectedPhones.includes(u.phone))
+    : USERS.slice(0, Math.min(userCount, USERS.length));
+
   // Stats
   const onlineMins = data.onlineMinutes || {};
   let doneCount = 0, onlineCount = 0;
-  for (const u of USERS) {
+  for (const u of activeUsers) {
     const mins = onlineMins[u.phone] || 0;
     if (mins >= minMinutes) doneCount++;
     if (loggedInTokens[u.phone] && !isTokenExpired(loggedInTokens[u.phone])) onlineCount++;
@@ -1332,14 +1420,16 @@ function updateSchedUI() {
   const doneEl   = document.getElementById('schedDoneCount');
   const onlineEl = document.getElementById('schedOnlineCount');
   const totalEl  = document.getElementById('schedTotalCount');
+  const hoursLabelEl = document.getElementById('schedDoneHoursLabel');
+  if (hoursLabelEl) hoursLabelEl.textContent = minH;
   if (doneEl)   doneEl.textContent   = doneCount;
   if (onlineEl) onlineEl.textContent = onlineCount;
-  if (totalEl)  totalEl.textContent  = USERS.length;
+  if (totalEl)  totalEl.textContent  = activeUsers.length;
 
   // Status line
   if (line && data.loginDoneAt) {
     const loginAt = new Date(data.loginDoneAt).toLocaleTimeString('vi-VN');
-    line.textContent = `✅ Đã đăng nhập lúc ${loginAt} — ${doneCount}/${USERS.length} user đạt ${minH}h online hôm nay`;
+    line.textContent = `✅ Đã đăng nhập lúc ${loginAt} — ${doneCount}/${activeUsers.length} user đạt ${minH}h online hôm nay`;
   } else if (line && data.loginTargetTime) {
     const t = new Date(data.loginTargetTime);
     line.textContent = `⏰ Dự kiến đăng nhập lúc ${t.toLocaleTimeString('vi-VN')} hôm nay`;
@@ -1347,16 +1437,26 @@ function updateSchedUI() {
 
   // Update per-user online mini-bar trên card (nếu đang hiển thị)
   for (const u of USERS) {
-    const mins = onlineMins[u.phone] || 0;
-    const pct  = Math.min(100, (mins / minMinutes) * 100);
+    const isInSelected = !data.selectedPhones || data.selectedPhones.includes(u.phone);
     const barEl = document.getElementById(`online-fill-${u.phone}`);
     const lblEl = document.getElementById(`online-label-${u.phone}`);
-    if (barEl) barEl.style.width = pct + '%';
-    if (lblEl) {
-      const h = Math.floor(mins / 60);
-      const m = Math.round(mins % 60);
-      lblEl.textContent = `${h}h${m}m / ${minH}h`;
-      lblEl.parentElement.className = 'user-online-label' + (mins >= minMinutes ? ' done' : '');
+
+    if (isInSelected) {
+      const mins = onlineMins[u.phone] || 0;
+      const pct  = Math.min(100, (mins / minMinutes) * 100);
+      if (barEl) barEl.style.width = pct + '%';
+      if (lblEl) {
+        const h = Math.floor(mins / 60);
+        const m = Math.round(mins % 60);
+        lblEl.textContent = `${h}h${m}m / ${minH}h`;
+        lblEl.parentElement.className = 'user-online-label' + (mins >= minMinutes ? ' done' : '');
+      }
+    } else {
+      if (barEl) barEl.style.width = '0%';
+      if (lblEl) {
+        lblEl.textContent = 'Không chạy';
+        lblEl.parentElement.className = 'user-online-label';
+      }
     }
   }
 }
@@ -1411,7 +1511,14 @@ function triggerPingNow() {
 
 async function pingKeepAlive() {
   if (isPinging) return;
-  const phones = Object.keys(loggedInTokens);
+  const data = getSchedData();
+  const allPhones = Object.keys(loggedInTokens);
+  
+  // Chỉ duy trì đăng nhập cho các user nằm trong danh sách chọn của ngày hôm nay
+  const phones = data.selectedPhones 
+    ? allPhones.filter(p => data.selectedPhones.includes(p))
+    : allPhones;
+
   if (phones.length === 0) {
     stopKeepAlive();
     document.getElementById('keepAliveBanner').style.display = 'none';
@@ -1486,12 +1593,18 @@ async function pingKeepAlive() {
 }
 
 function checkAndEnableKeepAlive() {
-  const phones = Object.keys(loggedInTokens);
+  const data = getSchedData();
+  const allPhones = Object.keys(loggedInTokens);
+  const phones = data.selectedPhones 
+    ? allPhones.filter(p => data.selectedPhones.includes(p))
+    : allPhones;
   if (phones.length > 0) {
     document.getElementById('keepAliveBanner').style.display = 'flex';
     if (document.getElementById('keepAliveToggle').checked) {
       startKeepAlive();
     }
+  } else {
+    document.getElementById('keepAliveBanner').style.display = 'none';
   }
 }
 
@@ -1516,6 +1629,23 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('apiUrl').value  = apiBase;
   document.getElementById('appUrl').value  = appBaseUrl;
   document.getElementById('countTotal').textContent = USERS.length;
+
+  // Khôi phục cấu hình scheduler
+  try {
+    const cfgRaw = localStorage.getItem('adminTool_schedConfig');
+    if (cfgRaw) {
+      const cfg = JSON.parse(cfgRaw);
+      if (cfg.fromH !== undefined) document.getElementById('schedHourFrom').value = cfg.fromH;
+      if (cfg.toH !== undefined) document.getElementById('schedHourTo').value = cfg.toH;
+      if (cfg.minH !== undefined) document.getElementById('schedMinHours').value = cfg.minH;
+      if (cfg.userCount !== undefined) document.getElementById('schedUserCount').value = cfg.userCount;
+    } else {
+      document.getElementById('schedUserCount').value = USERS.length;
+    }
+  } catch (e) {
+    console.error('Lỗi khôi phục cấu hình scheduler:', e);
+    document.getElementById('schedUserCount').value = USERS.length;
+  }
 
   // Dọn token hết hạn khỏi bộ nhớ
   let expiredCount = 0;
@@ -1655,23 +1785,26 @@ function cardHTML(u) {
   const schedPanel = document.getElementById('schedulerPanel');
   if (schedRunning || (schedPanel && schedPanel.style.display !== 'none')) {
     const data = getSchedData();
-    const { minH } = schedGetConfig();
-    const minMinutes = minH * 60;
-    const mins = (data.onlineMinutes || {})[u.phone] || 0;
-    const pct  = Math.min(100, (mins / minMinutes) * 100);
-    const h = Math.floor(mins / 60);
-    const m = Math.round(mins % 60);
-    const done = mins >= minMinutes;
-    onlineBarHtml = `
-    <div class="user-online-bar">
-      <div class="user-online-label${done ? ' done' : ''}">
-        <span>🕐 Online hôm nay</span>
-        <span id="online-label-${u.phone}">${h}h${m}m / ${minH}h</span>
-      </div>
-      <div class="user-online-track">
-        <div class="user-online-fill" id="online-fill-${u.phone}" style="width:${pct}%"></div>
-      </div>
-    </div>`;
+    // Nếu hôm nay có danh sách chọn và user không nằm trong đó thì không hiển thị bar
+    if (!data.selectedPhones || data.selectedPhones.includes(u.phone)) {
+      const { minH } = schedGetConfig();
+      const minMinutes = minH * 60;
+      const mins = (data.onlineMinutes || {})[u.phone] || 0;
+      const pct  = Math.min(100, (mins / minMinutes) * 100);
+      const h = Math.floor(mins / 60);
+      const m = Math.round(mins % 60);
+      const done = mins >= minMinutes;
+      onlineBarHtml = `
+      <div class="user-online-bar">
+        <div class="user-online-label${done ? ' done' : ''}">
+          <span>🕐 Online hôm nay</span>
+          <span id="online-label-${u.phone}">${h}h${m}m / ${minH}h</span>
+        </div>
+        <div class="user-online-track">
+          <div class="user-online-fill" id="online-fill-${u.phone}" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+    }
   }
 
   return `
@@ -2011,6 +2144,149 @@ function showToast(type, icon, msg) {
     el.style.animation = 'fadeOut 0.3s cubic-bezier(0.4,0,0.2,1) forwards';
     setTimeout(() => el.remove(), 300);
   }, 3000);
+}
+
+// ── GA Boost — Load frontend ẩn để GA ghi nhận traffic ────────────────────────
+let gaBoostInterval = null;
+let gaBoostIndex = 0;
+let gaBoostDone = 0;
+let gaBoostActive = false;
+const GA_BOOST_MAX_IFRAMES = 3;    // Tối đa 3 iframe cùng lúc
+const GA_BOOST_ROTATE_MS  = 30000; // Mỗi 30s swap user mới
+
+function getGABoostTargetUrl() {
+  return appBaseUrl || 'https://atroo.vercel.app';
+}
+
+function toggleGABoost(enabled) {
+  if (enabled) {
+    startGABoost();
+  } else {
+    stopGABoost();
+  }
+}
+
+function startGABoost() {
+  if (gaBoostActive) return;
+
+  const baseUrl = getGABoostTargetUrl();
+  if (!baseUrl) {
+    showToast('error', '⚠️', 'GA Boost: Chưa có App URL!');
+    const toggle = document.getElementById('gaBoostToggle');
+    if (toggle) toggle.checked = false;
+    return;
+  }
+
+  gaBoostActive = true;
+  gaBoostIndex = 0;
+  gaBoostDone = 0;
+
+  // Hiển thị panel
+  const panel = document.getElementById('gaBoostPanel');
+  if (panel) panel.style.display = 'flex';
+
+  // Xác định danh sách user cần load (ưu tiên user đã login)
+  const data = getSchedData();
+  const selectedPhones = data.selectedPhones || USERS.map(u => u.phone);
+  const loggedPhones = Object.keys(loggedInTokens).filter(p => selectedPhones.includes(p));
+  const targetCount = loggedPhones.length || selectedPhones.length;
+
+  const totalEl = document.getElementById('gaBoostTotal');
+  if (totalEl) totalEl.textContent = targetCount;
+
+  // Tạo container cho iframes
+  let container = document.getElementById('gaIframeContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'gaIframeContainer';
+    container.className = 'ga-iframe-container';
+    document.body.appendChild(container);
+  }
+
+  // Bắt đầu rotation
+  rotateGAIframes();
+  gaBoostInterval = setInterval(rotateGAIframes, GA_BOOST_ROTATE_MS);
+
+  showToast('success', '📊', `GA Boost đã bật! Load frontend cho ${targetCount} users.`);
+}
+
+function stopGABoost() {
+  gaBoostActive = false;
+  if (gaBoostInterval) {
+    clearInterval(gaBoostInterval);
+    gaBoostInterval = null;
+  }
+
+  // Xóa tất cả iframes
+  const container = document.getElementById('gaIframeContainer');
+  if (container) container.innerHTML = '';
+
+  const panel = document.getElementById('gaBoostPanel');
+  if (panel) panel.style.display = 'none';
+
+  showToast('info', '📊', 'GA Boost đã tắt.');
+}
+
+function rotateGAIframes() {
+  if (!gaBoostActive) return;
+
+  const baseUrl = getGABoostTargetUrl();
+  const container = document.getElementById('gaIframeContainer');
+  if (!container || !baseUrl) return;
+
+  // Xóa iframes cũ
+  container.innerHTML = '';
+
+  // Xác định batch user tiếp theo
+  const data = getSchedData();
+  const selectedPhones = data.selectedPhones || USERS.map(u => u.phone);
+  const targetPhones = Object.keys(loggedInTokens).length > 0
+    ? Object.keys(loggedInTokens).filter(p => selectedPhones.includes(p))
+    : selectedPhones;
+
+  const totalTarget = targetPhones.length;
+  if (totalTarget === 0) {
+    stopGABoost();
+    return;
+  }
+
+  // Load batch GA_BOOST_MAX_IFRAMES iframes
+  const batchSize = Math.min(GA_BOOST_MAX_IFRAMES, totalTarget - gaBoostDone);
+
+  if (batchSize <= 0) {
+    // Đã load xong tất cả → dừng
+    updateGABoostUI(totalTarget, totalTarget);
+    showToast('success', '📊', `GA Boost hoàn thành! ${totalTarget} users đã load.`);
+    stopGABoost();
+    return;
+  }
+
+  for (let i = 0; i < batchSize; i++) {
+    const idx = gaBoostIndex % totalTarget;
+    gaBoostIndex++;
+
+    const iframe = document.createElement('iframe');
+    iframe.src = `${baseUrl}/login?_ga_boost=1&_t=${Date.now()}&_u=${idx}`;
+    iframe.style.width = '1px';
+    iframe.style.height = '1px';
+    iframe.style.border = 'none';
+    iframe.setAttribute('loading', 'lazy');
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+    container.appendChild(iframe);
+  }
+
+  gaBoostDone += batchSize;
+  updateGABoostUI(gaBoostDone, totalTarget);
+}
+
+function updateGABoostUI(done, total) {
+  const countEl = document.getElementById('gaBoostCount');
+  const totalEl = document.getElementById('gaBoostTotal');
+  const barEl   = document.getElementById('gaBoostBar');
+
+  if (countEl) countEl.textContent = Math.min(done, total);
+  if (totalEl) totalEl.textContent = total;
+  if (barEl)   barEl.style.width = Math.min(100, (done / total) * 100) + '%';
 }
 </script>
 </body>
