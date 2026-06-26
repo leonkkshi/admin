@@ -71,8 +71,9 @@ jobs:
     name: GA Frontend Visit
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    # Chạy khi: GA schedule, hoặc manual với run_ga_visit=true
+    # Chạy khi: push, GA schedule, hoặc manual với run_ga_visit=true
     if: >
+      github.event_name == 'push' ||
       github.event.schedule == '0 1,3,5,7,9,11,13,15 * * *' ||
       github.event_name == 'workflow_dispatch' && github.event.inputs.run_ga_visit == 'true'
 
