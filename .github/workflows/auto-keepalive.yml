@@ -7,9 +7,9 @@ on:
     # Heartbeat: mỗi 5 phút, từ 23:00 UTC đến 16:55 UTC
     # = 6:00 SA đến 23:55 tối giờ Việt Nam (UTC+7)
     - cron: '*/5 23,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 * * *'
-    # GA Visit: mỗi 2 giờ, từ 01:00 UTC đến 15:00 UTC
+    # GA Visit: mỗi giờ, từ 01:00 UTC đến 15:00 UTC
     # = 8:00 SA đến 22:00 tối giờ Việt Nam (UTC+7)
-    - cron: '0 1,3,5,7,9,11,13,15 * * *'
+    - cron: '0 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 * * *'
 
   workflow_dispatch:       # Cho phép chạy thủ công trên GitHub UI
     inputs:
@@ -74,7 +74,7 @@ jobs:
     # Chạy khi: push, GA schedule, hoặc manual với run_ga_visit=true
     if: >
       github.event_name == 'push' ||
-      github.event.schedule == '0 1,3,5,7,9,11,13,15 * * *' ||
+      github.event.schedule == '0 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 * * *' ||
       github.event_name == 'workflow_dispatch' && github.event.inputs.run_ga_visit == 'true'
 
     steps:

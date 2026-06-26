@@ -17,8 +17,9 @@ const USERS = require('./users');
 
 const APP_URL = (process.env.APP_URL || 'https://atroo.vercel.app').replace(/\/$/, '');
 const TEST_MODE = process.env.TEST_MODE === 'true';
-const MAX_USERS = TEST_MODE ? 1 : parseInt(process.env.MAX_USERS || '0') || USERS.length;
+const MAX_USERS = TEST_MODE ? 1 : parseInt(process.env.MAX_USERS || '3');
 const CONCURRENCY = parseInt(process.env.CONCURRENCY || '3');
+const STAY_DURATION_SEC = parseInt(process.env.STAY_DURATION_SEC || '180');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -83,44 +84,64 @@ async function visitUser(browser, user, index, total) {
       return { success: false, user, error: errorText.trim() };
     }
 
-    // ── GA Engagement: giữ trang mở + tương tác ──────────────────────────────
+    // ── GA Engagement: giữ trang mở + tương tác ngẫu nhiên liên tục ────────────────────────
+    console.log(`  ⏳ ${label} — Bắt đầu tương tác để duy trì session trong ${STAY_DURATION_SEC} giây...`);
+    const startTime = Date.now();
+    const endTime = startTime + STAY_DURATION_SEC * 1000;
+    let pageviewCount = 1; // Đã mở trang dashboard là 1 pageview
 
-    // 7. Đợi trang dashboard load
+    // Đợi trang dashboard load ban đầu
     await sleep(randomInt(3000, 5000));
 
-    // 8. Scroll nhẹ để tạo engagement event
-    await page.evaluate(() => {
-      window.scrollBy(0, Math.floor(Math.random() * 400) + 200);
-    });
-    await sleep(randomInt(2000, 4000));
-
-    // 9. Navigate đến 1–2 trang khác nếu có (tạo thêm pageview)
     const internalPaths = ['/', '/tax', '/pos', '/chat', '/settings'];
-    const randomPaths = shuffleArray(internalPaths).slice(0, randomInt(1, 2));
 
-    for (const path of randomPaths) {
-      try {
-        await page.goto(`${APP_URL}${path}`, { waitUntil: 'networkidle', timeout: 15000 });
-        console.log(`     └─ 📄 Visited: ${path}`);
-        await sleep(randomInt(3000, 8000)); // GA cần > 10s tổng cho engaged session
+    while (Date.now() < endTime) {
+      const remainingMs = endTime - Date.now();
+      if (remainingMs <= 0) break;
 
-        // Scroll nhẹ trên mỗi trang
+      // Chọn hành động ngẫu nhiên:
+      // 0: Scroll nhẹ (chiếm 50%)
+      // 1: Chuyển trang internal (chiếm 30%)
+      // 2: Chỉ chờ đọc tin (chiếm 20%)
+      const rand = Math.random();
+      let action = 2; // Default: read
+      if (rand < 0.5) {
+        action = 0; // Scroll
+      } else if (rand < 0.8) {
+        action = 1; // Navigate
+      }
+
+      // Thời gian chờ cho hành động này: từ 20 đến 45 giây để GA ghi nhận engagement tự nhiên
+      const actionDelay = Math.min(randomInt(20000, 45000), remainingMs);
+
+      if (action === 0) {
+        // Scroll nhẹ
         await page.evaluate(() => {
-          window.scrollBy(0, Math.floor(Math.random() * 300) + 100);
-        });
-        await sleep(randomInt(1000, 3000));
-      } catch (navErr) {
-        console.log(`     └─ ⚠️ Lỗi navigate ${path}: ${navErr.message}`);
+          window.scrollBy(0, (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 300) + 100));
+        }).catch(() => {});
+        console.log(`     └─ 📜 [${user.name}] Cuộn trang ngẫu nhiên`);
+      } else if (action === 1) {
+        // Chuyển trang ngẫu nhiên
+        const randomPath = internalPaths[randomInt(0, internalPaths.length - 1)];
+        try {
+          console.log(`     └─ 📄 [${user.name}] Đang chuyển sang trang ${randomPath}...`);
+          await page.goto(`${APP_URL}${randomPath}`, { waitUntil: 'networkidle', timeout: 15000 });
+          pageviewCount++;
+        } catch (navErr) {
+          // Bỏ qua lỗi navigate và thử lại ở lượt tiếp theo
+        }
+      } else {
+        console.log(`     └─ 💤 [${user.name}] Đang xem nội dung trang...`);
+      }
+
+      if (actionDelay > 0) {
+        await sleep(actionDelay);
       }
     }
 
-    // 10. Tổng thời gian trên trang: ~15–30s → đủ cho GA engaged session
-    const totalEngagementMs = randomInt(5000, 10000);
-    await sleep(totalEngagementMs);
-
-    console.log(`  🏁 ${label} — Hoàn thành! (${randomPaths.length + 1} pageviews)`);
+    console.log(`  🏁 ${label} — Hoàn thành tương tác! (Tổng cộng ${pageviewCount} pageviews)`);
     await context.close();
-    return { success: true, user, pages: randomPaths.length + 1 };
+    return { success: true, user, pages: pageviewCount };
 
   } catch (err) {
     console.log(`  💥 ${label} — Lỗi: ${err.message}`);
