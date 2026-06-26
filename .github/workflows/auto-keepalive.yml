@@ -15,12 +15,14 @@ on:
     inputs:
       login_only:
         description: 'Chỉ đăng nhập, không heartbeat'
+        type: boolean
         required: false
-        default: 'false'
+        default: false
       run_ga_visit:
         description: 'Chạy GA Frontend Visit'
+        type: boolean
         required: false
-        default: 'false'
+        default: false
 
 jobs:
   # ── Job 1: Heartbeat — giữ backend session sống (nhẹ, nhanh) ────────────────
