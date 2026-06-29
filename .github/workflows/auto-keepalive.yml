@@ -1,4 +1,4 @@
-name: 💓 Auto Keepalive & GA Visit — A Trợ Users
+name: 💓 Auto Keepalive — A Trợ Users
 
 on:
   push:
@@ -7,19 +7,11 @@ on:
     # Heartbeat: mỗi 5 phút, từ 23:00 UTC đến 16:55 UTC
     # = 6:00 SA đến 23:55 tối giờ Việt Nam (UTC+7)
     - cron: '*/5 23,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 * * *'
-    # GA Visit: mỗi 30 phút, từ 01:00 UTC đến 15:00 UTC
-    # = 8:00 SA đến 22:00 tối giờ Việt Nam (UTC+7)
-    - cron: '*/30 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 * * *'
 
   workflow_dispatch:       # Cho phép chạy thủ công trên GitHub UI
     inputs:
       login_only:
         description: 'Chỉ đăng nhập, không heartbeat'
-        type: boolean
-        required: false
-        default: false
-      run_ga_visit:
-        description: 'Chạy GA Frontend Visit'
         type: boolean
         required: false
         default: false
@@ -30,10 +22,10 @@ jobs:
     name: Heartbeat All Users
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    # Chạy khi: push, heartbeat schedule, hoặc manual (không có run_ga_visit)
+    # Chạy khi: push, heartbeat schedule, hoặc manual
     if: >
       github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch' && github.event.inputs.run_ga_visit != 'true' ||
+      github.event_name == 'workflow_dispatch' ||
       github.event.schedule == '*/5 23,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 * * *'
 
     steps:
@@ -66,36 +58,3 @@ jobs:
           path: session-tokens.json
           key: session-tokens-${{ github.run_id }}-${{ github.run_attempt }}
 
-  # ── Job 2: GA Visit — mở browser thật, đăng nhập qua UI (nặng hơn) ─────────
-  ga-visit:
-    name: GA Frontend Visit
-    runs-on: ubuntu-latest
-    timeout-minutes: 40
-    # Chạy khi: push, GA schedule, hoặc manual với run_ga_visit=true
-    if: >
-      github.event_name == 'push' ||
-      github.event.schedule == '*/30 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 * * *' ||
-      github.event_name == 'workflow_dispatch' && github.event.inputs.run_ga_visit == 'true'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Playwright package
-        run: npm install playwright
-
-      - name: Install Playwright (Chromium only)
-        run: npx playwright install chromium --with-deps
-
-      - name: Run GA Frontend Visit
-        env:
-          APP_URL: https://atroo.vercel.app
-          CONCURRENCY: '4'
-          MAX_USERS: '4'
-          STAY_DURATION_SEC: '1800'
-        run: node scripts/ga-visit.js
