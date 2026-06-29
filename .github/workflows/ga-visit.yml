@@ -1,6 +1,8 @@
 name: 🌐 GA Frontend Visit — A Trợ Users
 
 on:
+  push:
+    branches: [ main ]
   schedule:
     # Mỗi 30 phút, từ 01:00 UTC đến 15:30 UTC
     # = 8:00 SA đến 22:30 tối giờ Việt Nam (UTC+7)
